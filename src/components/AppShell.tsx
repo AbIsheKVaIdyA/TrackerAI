@@ -57,7 +57,7 @@ export function AppShell({ children }: Props) {
         me={me}
         live={couple.live}
       />
-      <main className="mx-auto max-w-6xl px-4 py-5">
+      <main className="mx-auto max-w-6xl px-3 sm:px-4 py-4 sm:py-5 pb-24 md:pb-5">
         {tasksApi.needsMigration && (
           <div className="mb-4 border border-critical/50 bg-critical-dim px-3 py-2.5 text-sm">
             <p className="font-medium text-critical">Database update required</p>

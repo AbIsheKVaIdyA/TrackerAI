@@ -70,26 +70,26 @@ export function SummaryView({
         </select>
       </div>
 
-      <div className="mb-4 grid grid-cols-3 gap-3">
-        <div className="border border-line bg-surface-elevated px-3 py-2.5">
-          <p className="text-[11px] uppercase tracking-wide text-ink-dim">Done</p>
-          <p className="text-2xl font-semibold tabular-nums text-green-400">
+      <div className="mb-4 grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="border border-line bg-surface-elevated px-2 sm:px-3 py-2.5">
+          <p className="text-[10px] sm:text-[11px] uppercase tracking-wide text-ink-dim">Done</p>
+          <p className="text-xl sm:text-2xl font-semibold tabular-nums text-green-400">
             {done.length}
           </p>
         </div>
-        <div className="border border-line bg-surface-elevated px-3 py-2.5">
-          <p className="text-[11px] uppercase tracking-wide text-ink-dim">
-            Unfinished
+        <div className="border border-line bg-surface-elevated px-2 sm:px-3 py-2.5">
+          <p className="text-[10px] sm:text-[11px] uppercase tracking-wide text-ink-dim">
+            Left
           </p>
-          <p className="text-2xl font-semibold tabular-nums text-critical">
+          <p className="text-xl sm:text-2xl font-semibold tabular-nums text-critical">
             {unfinished.length}
           </p>
         </div>
-        <div className="border border-line bg-surface-elevated px-3 py-2.5">
-          <p className="text-[11px] uppercase tracking-wide text-ink-dim">
-            Completion
+        <div className="border border-line bg-surface-elevated px-2 sm:px-3 py-2.5">
+          <p className="text-[10px] sm:text-[11px] uppercase tracking-wide text-ink-dim">
+            Done %
           </p>
-          <p className="text-2xl font-semibold tabular-nums">
+          <p className="text-xl sm:text-2xl font-semibold tabular-nums">
             {weekTasks.length === 0
               ? "—"
               : `${Math.round((done.length / weekTasks.length) * 100)}%`}

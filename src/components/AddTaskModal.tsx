@@ -86,7 +86,7 @@ export function AddTaskModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/70 p-4 pt-[8vh]">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-start justify-center bg-black/70 sm:p-4 sm:pt-[8vh]">
       <button
         type="button"
         aria-label="Close"
@@ -95,16 +95,17 @@ export function AddTaskModal({
       />
       <form
         onSubmit={handleSubmit}
-        className="relative z-10 w-full max-w-md border border-line bg-surface-elevated p-5 shadow-xl"
+        className="relative z-10 w-full max-w-md border border-line bg-surface-elevated p-5 shadow-xl max-h-[92vh] overflow-y-auto rounded-t-xl sm:rounded-none pb-[max(1.25rem,env(safe-area-inset-bottom))]"
       >
+        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-line sm:hidden" />
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-semibold">Add task</h2>
           <button
             type="button"
             onClick={onClose}
-            className="text-ink-muted hover:text-ink text-sm"
+            className="text-ink-muted hover:text-ink text-sm px-2 py-1"
           >
-            Esc
+            Close
           </button>
         </div>
 

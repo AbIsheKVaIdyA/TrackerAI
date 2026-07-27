@@ -20,8 +20,8 @@ export function PersonFilterBar({ settings, me, filter, onChange }: Props) {
   ];
 
   return (
-    <div className="flex flex-wrap items-center gap-1 mb-4">
-      <span className="mr-1 text-[11px] uppercase tracking-wider text-ink-dim">
+    <div className="flex items-center gap-1 mb-4 overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0 pb-0.5">
+      <span className="mr-1 shrink-0 text-[11px] uppercase tracking-wider text-ink-dim">
         Show
       </span>
       {options.map((opt) => {
@@ -31,7 +31,7 @@ export function PersonFilterBar({ settings, me, filter, onChange }: Props) {
             key={opt.value}
             type="button"
             onClick={() => onChange(opt.value)}
-            className={`rounded px-2.5 py-1 text-xs transition-colors ${
+            className={`shrink-0 rounded px-2.5 py-1.5 text-xs transition-colors ${
               active
                 ? opt.value === "b"
                   ? "bg-sky-500/20 text-sky-300"

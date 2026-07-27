@@ -55,7 +55,7 @@ export function WeekView({
         </div>
       </div>
 
-      <div className="mb-4 flex gap-1 overflow-x-auto border-b border-line pb-0">
+      <div className="mb-4 flex gap-1 overflow-x-auto border-b border-line pb-0 -mx-3 px-3 sm:mx-0 sm:px-0 scrollbar-none">
         {WEEKS.map((w) => {
           const count = tasks.filter((t) => t.weekAssigned === w.week).length;
           const openCritical = tasks.filter(
@@ -70,17 +70,17 @@ export function WeekView({
               key={w.week}
               type="button"
               onClick={() => setSelected(w.week)}
-              className={`relative shrink-0 px-3 py-2 text-left text-sm transition-colors ${
+              className={`relative shrink-0 px-2.5 sm:px-3 py-2 text-left text-sm transition-colors ${
                 active
                   ? "text-ink border-b-2 border-critical -mb-px"
                   : "text-ink-muted hover:text-ink"
               }`}
             >
-              <span className="font-medium">{w.label}</span>
-              <span className="ml-1.5 text-[11px] text-ink-dim">
+              <span className="font-medium">W{w.week}</span>
+              <span className="ml-1.5 hidden sm:inline text-[11px] text-ink-dim">
                 {w.rangeLabel}
               </span>
-              <span className="ml-1.5 tabular-nums text-[11px] text-ink-dim">
+              <span className="ml-1 tabular-nums text-[11px] text-ink-dim">
                 ({count})
               </span>
               {openCritical > 0 && (

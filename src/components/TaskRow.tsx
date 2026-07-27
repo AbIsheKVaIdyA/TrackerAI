@@ -76,6 +76,70 @@ export function TaskRow({
         ? "text-ink-muted"
         : "text-critical/80";
 
+  const controls = (
+    <>
+      {onSetAssignee && (
+        <select
+          value={task.assignee}
+          onChange={(e) => onSetAssignee(task.id, e.target.value as Assignee)}
+          className="min-w-0 flex-1 sm:flex-none sm:max-w-[6.5rem] rounded border border-line bg-surface px-1.5 py-1.5 sm:py-0.5 text-[11px] text-ink-muted outline-none"
+          title="Who owns this"
+        >
+          <option value="a">{settings.partnerAName}</option>
+          <option value="b">{settings.partnerBName}</option>
+          <option value="both">Shared</option>
+        </select>
+      )}
+      {task.status !== "blocked" && task.status !== "done" && (
+        <button
+          type="button"
+          onClick={() => {
+            setBlockReason(task.notes ?? "");
+            setBlocking(true);
+          }}
+          className="rounded px-2 py-1.5 sm:py-0.5 text-[11px] text-ink-dim hover:bg-red-500/15 hover:text-red-400"
+        >
+          Block
+        </button>
+      )}
+      {onAssignWeek && (
+        <select
+          value={task.weekAssigned ?? ""}
+          onChange={(e) =>
+            onAssignWeek(
+              task.id,
+              e.target.value === ""
+                ? null
+                : (Number(e.target.value) as WeekNumber)
+            )
+          }
+          className="min-w-0 flex-1 sm:flex-none sm:max-w-[7.5rem] rounded border border-line bg-surface px-1.5 py-1.5 sm:py-0.5 text-[11px] text-ink-muted outline-none"
+          title="Assign week"
+        >
+          <option value="">Backlog</option>
+          {WEEKS.map((w) => (
+            <option key={w.week} value={w.week}>
+              W{w.week}
+            </option>
+          ))}
+        </select>
+      )}
+      {onPushNext &&
+        task.weekAssigned != null &&
+        task.weekAssigned < 5 &&
+        task.status !== "done" && (
+          <button
+            type="button"
+            onClick={() => onPushNext(task)}
+            className="rounded px-2 py-1.5 sm:py-0.5 text-[11px] text-ink-dim hover:bg-surface-hover hover:text-ink"
+            title="Push to next week"
+          >
+            → W{task.weekAssigned + 1}
+          </button>
+        )}
+    </>
+  );
+
   return (
     <div
       className={`group border-l-2 ${
@@ -88,17 +152,17 @@ export function TaskRow({
             : task.assignee === "both"
               ? "border-l-ink-dim/40"
               : "border-l-transparent"
-      } ${dense ? "py-1.5 px-2" : "py-2.5 px-3"} hover:bg-surface-hover/60 transition-colors`}
+      } ${dense ? "py-2 px-2 sm:py-1.5" : "py-2.5 px-3"} hover:bg-surface-hover/60 transition-colors`}
     >
-      <div className="flex items-start gap-2">
+      <div className="flex items-start gap-2.5 sm:gap-2">
         <button
           type="button"
-          title={`Status: ${meta.label} — click to cycle`}
+          title={`Status: ${meta.label} — tap to cycle`}
           onClick={() => onCycleStatus(task)}
-          className={`mt-0.5 h-4 w-4 shrink-0 rounded-sm border ${meta.box} flex items-center justify-center`}
+          className={`mt-0.5 h-6 w-6 sm:h-4 sm:w-4 shrink-0 rounded-sm border ${meta.box} flex items-center justify-center`}
         >
           {task.status === "done" && (
-            <svg viewBox="0 0 12 12" className="h-3 w-3 text-black" aria-hidden>
+            <svg viewBox="0 0 12 12" className="h-3.5 w-3.5 sm:h-3 sm:w-3 text-black" aria-hidden>
               <path
                 d="M2.5 6.5L5 9l4.5-5.5"
                 fill="none"
@@ -111,13 +175,15 @@ export function TaskRow({
             <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
           )}
           {task.status === "blocked" && (
-            <span className="text-[8px] leading-none text-red-300">!</span>
+            <span className="text-[9px] leading-none text-red-300">!</span>
           )}
         </button>
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-            <span className={`text-sm ${meta.className}`}>{task.title}</span>
+            <span className={`text-[13px] sm:text-sm break-words ${meta.className}`}>
+              {task.title}
+            </span>
             {task.priority === "critical" && (
               <span className="text-[10px] font-semibold uppercase tracking-wider text-critical">
                 IMP
@@ -163,99 +229,47 @@ export function TaskRow({
               </>
             )}
           </div>
+
+          {/* Mobile: actions under content */}
+          <div className="mt-2 flex flex-wrap items-center gap-1.5 sm:hidden">
+            {controls}
+          </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-1 opacity-70 group-hover:opacity-100">
-          {onSetAssignee && (
-            <select
-              value={task.assignee}
-              onChange={(e) =>
-                onSetAssignee(task.id, e.target.value as Assignee)
-              }
-              className="max-w-[6.5rem] rounded border border-line bg-surface px-1 py-0.5 text-[11px] text-ink-muted outline-none"
-              title="Who owns this"
-            >
-              <option value="a">{settings.partnerAName}</option>
-              <option value="b">{settings.partnerBName}</option>
-              <option value="both">Shared</option>
-            </select>
-          )}
-          {task.status !== "blocked" && task.status !== "done" && (
-            <button
-              type="button"
-              onClick={() => {
-                setBlockReason(task.notes ?? "");
-                setBlocking(true);
-              }}
-              className="rounded px-1.5 py-0.5 text-[11px] text-ink-dim hover:bg-red-500/15 hover:text-red-400"
-            >
-              Block
-            </button>
-          )}
-          {onAssignWeek && (
-            <select
-              value={task.weekAssigned ?? ""}
-              onChange={(e) =>
-                onAssignWeek(
-                  task.id,
-                  e.target.value === ""
-                    ? null
-                    : (Number(e.target.value) as WeekNumber)
-                )
-              }
-              className="max-w-[7.5rem] rounded border border-line bg-surface px-1 py-0.5 text-[11px] text-ink-muted outline-none"
-              title="Assign week"
-            >
-              <option value="">Backlog</option>
-              {WEEKS.map((w) => (
-                <option key={w.week} value={w.week}>
-                  W{w.week}
-                </option>
-              ))}
-            </select>
-          )}
-          {onPushNext &&
-            task.weekAssigned != null &&
-            task.weekAssigned < 5 &&
-            task.status !== "done" && (
-              <button
-                type="button"
-                onClick={() => onPushNext(task)}
-                className="rounded px-1.5 py-0.5 text-[11px] text-ink-dim hover:bg-surface-hover hover:text-ink"
-                title="Push to next week"
-              >
-                → W{task.weekAssigned + 1}
-              </button>
-            )}
+        {/* Desktop: actions on the right */}
+        <div className="hidden sm:flex shrink-0 items-center gap-1 opacity-80 group-hover:opacity-100">
+          {controls}
         </div>
       </div>
 
       {blocking && (
-        <div className="mt-2 ml-6 flex gap-2">
+        <div className="mt-2 ml-8 sm:ml-6 flex flex-col sm:flex-row gap-2">
           <input
             autoFocus
             value={blockReason}
             onChange={(e) => setBlockReason(e.target.value)}
             placeholder="What's blocking this?"
-            className="flex-1 rounded border border-line bg-surface px-2 py-1 text-xs outline-none focus:border-red-500"
+            className="flex-1 rounded border border-line bg-surface px-2 py-2 sm:py-1 text-xs outline-none focus:border-red-500"
           />
-          <button
-            type="button"
-            onClick={async () => {
-              await onSetBlocked(task, blockReason.trim() || "Blocked");
-              setBlocking(false);
-            }}
-            className="rounded bg-red-500/20 px-2 py-1 text-xs text-red-400"
-          >
-            Save
-          </button>
-          <button
-            type="button"
-            onClick={() => setBlocking(false)}
-            className="rounded px-2 py-1 text-xs text-ink-muted"
-          >
-            Cancel
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={async () => {
+                await onSetBlocked(task, blockReason.trim() || "Blocked");
+                setBlocking(false);
+              }}
+              className="rounded bg-red-500/20 px-3 py-2 sm:py-1 text-xs text-red-400"
+            >
+              Save
+            </button>
+            <button
+              type="button"
+              onClick={() => setBlocking(false)}
+              className="rounded px-3 py-2 sm:py-1 text-xs text-ink-muted"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       )}
     </div>

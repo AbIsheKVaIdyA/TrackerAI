@@ -43,12 +43,13 @@ export function CoupleSettingsModal({ open, settings, onClose, onSave }: Props) 
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/70 p-4 pt-[12vh]">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-start justify-center bg-black/70 sm:p-4 sm:pt-[12vh]">
       <button type="button" aria-label="Close" className="absolute inset-0" onClick={onClose} />
       <form
         onSubmit={handleSubmit}
-        className="relative z-10 w-full max-w-md border border-line bg-surface-elevated p-5"
+        className="relative z-10 w-full max-w-md border border-line bg-surface-elevated p-5 rounded-t-xl sm:rounded-none pb-[max(1.25rem,env(safe-area-inset-bottom))]"
       >
+        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-line sm:hidden" />
         <h2 className="text-base font-semibold mb-1">Workspace</h2>
         <p className="text-xs text-ink-muted mb-4">
           Display names and tracker title. Synced on both devices.
