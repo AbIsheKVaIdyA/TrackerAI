@@ -37,7 +37,7 @@ export function AppShell({ children }: Props) {
     return tasksApi.tasks.filter((t) =>
       taskVisibleTo(t, couple.filter)
     );
-  }, [tasksApi.tasks, couple.filter, me]);
+  }, [tasksApi.tasks, couple.filter]);
 
   if (!couple.ready) {
     return (
