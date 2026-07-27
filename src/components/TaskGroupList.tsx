@@ -63,11 +63,11 @@ export function TaskGroupList({
         if (list.length === 0) return null;
         return (
           <section key={cat.value}>
-            <h3 className="mb-1 px-2 text-[11px] font-medium uppercase tracking-wider text-ink-dim">
+            <h3 className="mb-2 px-1 text-[11px] font-medium uppercase tracking-[0.14em] text-accent/80">
               {cat.label}
-              <span className="ml-1.5 text-ink-dim/60">{list.length}</span>
+              <span className="ml-1.5 text-ink-dim">{list.length}</span>
             </h3>
-            <div className="divide-y divide-line-subtle border border-line-subtle bg-surface-elevated/50">
+            <div className="divide-y divide-line overflow-hidden rounded-task border border-line/80">
               {list.map((task) => (
                 <TaskRow
                   key={task.id}

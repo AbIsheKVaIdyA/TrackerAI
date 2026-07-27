@@ -34,10 +34,13 @@ export function useCouple() {
       storedFilter === "all" ||
       storedFilter === "a" ||
       storedFilter === "b" ||
-      storedFilter === "both" ||
-      storedFilter === "mine"
+      storedFilter === "both"
     ) {
       setFilterState(storedFilter);
+    } else if (storedFilter === "mine") {
+      // legacy — same as Abhishek/person filter, default to all
+      setFilterState("all");
+      setStoredFilter("all");
     }
     setReady(true);
   }, []);

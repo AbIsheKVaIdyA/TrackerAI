@@ -36,7 +36,7 @@ export function BacklogView({
           Backlog is empty. New tasks without a week land here.
         </p>
       ) : (
-        <div className="divide-y divide-line-subtle border border-line bg-surface-elevated/50">
+        <div className="divide-y divide-line overflow-hidden rounded-task border border-line/80">
           {backlog.map((task) => (
             <TaskRow
               key={task.id}

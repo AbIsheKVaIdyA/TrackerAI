@@ -137,14 +137,10 @@ export function AddTaskModal({
                 key={opt.value}
                 type="button"
                 onClick={() => setAssignee(opt.value)}
-                className={`flex-1 rounded border px-2 py-2 text-xs font-medium transition-colors ${
+                className={`flex-1 rounded-full border px-2 py-2 text-xs font-medium transition-colors ${
                   assignee === opt.value
-                    ? opt.value === "b"
-                      ? "border-sky-500 bg-sky-500/15 text-sky-300"
-                      : opt.value === "both"
-                        ? "border-ink-muted bg-surface-hover text-ink"
-                        : "border-critical bg-critical-dim text-critical"
-                    : "border-line text-ink-muted hover:border-ink-dim"
+                    ? "border-accent bg-accent text-surface"
+                    : "border-line text-ink-muted hover:border-accent/40"
                 }`}
               >
                 {opt.label}
@@ -200,7 +196,7 @@ export function AddTaskModal({
               onClick={() => setPriority("critical")}
               className={`flex-1 rounded border px-3 py-2 text-sm font-medium transition-colors ${
                 priority === "critical"
-                  ? "border-critical bg-critical-dim text-critical"
+                  ? "border-ink bg-ink text-surface"
                   : "border-line text-ink-muted hover:border-ink-dim"
               }`}
             >

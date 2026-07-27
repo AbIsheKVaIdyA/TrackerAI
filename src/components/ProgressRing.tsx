@@ -26,7 +26,7 @@ export function ProgressRing({
           cy={size / 2}
           r={r}
           fill="none"
-          stroke="#2a2a32"
+          stroke="#222222"
           strokeWidth={stroke}
         />
         <circle
@@ -34,7 +34,7 @@ export function ProgressRing({
           cy={size / 2}
           r={r}
           fill="none"
-          stroke={clamped === 100 ? "#22c55e" : "#fb7185"}
+          stroke="#8fa8b8"
           strokeWidth={stroke}
           strokeDasharray={c}
           strokeDashoffset={offset}

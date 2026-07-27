@@ -46,7 +46,7 @@ export function WeekView({
           <p className="text-sm text-ink-muted">
             {weekDef.rangeLabel} · {done}/{weekTasks.length} done
             {criticalOpen > 0 && (
-              <span className="text-critical">
+              <span className="text-ink-muted">
                 {" "}
                 · {criticalOpen} critical open
               </span>
@@ -72,7 +72,7 @@ export function WeekView({
               onClick={() => setSelected(w.week)}
               className={`relative shrink-0 px-2.5 sm:px-3 py-2 text-left text-sm transition-colors ${
                 active
-                  ? "text-ink border-b-2 border-critical -mb-px"
+                  ? "text-ink border-b-2 border-accent -mb-px"
                   : "text-ink-muted hover:text-ink"
               }`}
             >
@@ -84,7 +84,7 @@ export function WeekView({
                 ({count})
               </span>
               {openCritical > 0 && (
-                <span className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-critical align-middle" />
+                <span className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-accent align-middle" />
               )}
             </button>
           );

@@ -35,7 +35,7 @@ export function AppShell({ children }: Props) {
 
   const visibleTasks = useMemo(() => {
     return tasksApi.tasks.filter((t) =>
-      taskVisibleTo(t, couple.filter, me)
+      taskVisibleTo(t, couple.filter)
     );
   }, [tasksApi.tasks, couple.filter, me]);
 

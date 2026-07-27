@@ -17,23 +17,23 @@ const STATUS_META: Record<
 > = {
   todo: {
     label: "Todo",
-    className: "text-ink-muted",
+    className: "text-ink",
     box: "border-ink-dim bg-transparent",
   },
   in_progress: {
     label: "In progress",
-    className: "text-blue-400",
-    box: "border-blue-500 bg-blue-500/20",
+    className: "text-ink",
+    box: "border-accent bg-accent/15",
   },
   blocked: {
     label: "Blocked",
-    className: "text-red-400",
-    box: "border-red-500 bg-red-500/20",
+    className: "text-ink-muted",
+    box: "border-ink-muted bg-ink/10",
   },
   done: {
     label: "Done",
-    className: "text-green-400 line-through decoration-ink-dim",
-    box: "border-green-500 bg-green-500",
+    className: "text-ink-dim line-through decoration-ink-dim",
+    box: "border-ink bg-ink",
   },
 };
 
@@ -69,20 +69,13 @@ export function TaskRow({
     task.weekAssigned != null &&
     isWeekPast(task.weekAssigned);
 
-  const assigneeTone =
-    task.assignee === "b"
-      ? "text-sky-300"
-      : task.assignee === "both"
-        ? "text-ink-muted"
-        : "text-critical/80";
-
   const controls = (
     <>
       {onSetAssignee && (
         <select
           value={task.assignee}
           onChange={(e) => onSetAssignee(task.id, e.target.value as Assignee)}
-          className="min-w-0 flex-1 sm:flex-none sm:max-w-[6.5rem] rounded border border-line bg-surface px-1.5 py-1.5 sm:py-0.5 text-[11px] text-ink-muted outline-none"
+          className="min-w-0 flex-1 sm:flex-none sm:max-w-[6.5rem] rounded border border-accent bg-accent px-1.5 py-1.5 sm:py-0.5 text-[11px] font-medium text-black outline-none [color-scheme:light]"
           title="Who owns this"
         >
           <option value="a">{settings.partnerAName}</option>
@@ -97,7 +90,7 @@ export function TaskRow({
             setBlockReason(task.notes ?? "");
             setBlocking(true);
           }}
-          className="rounded px-2 py-1.5 sm:py-0.5 text-[11px] text-ink-dim hover:bg-red-500/15 hover:text-red-400"
+          className="rounded px-2 py-1.5 sm:py-0.5 text-[11px] text-ink-dim hover:bg-surface-hover hover:text-ink"
         >
           Block
         </button>
@@ -113,7 +106,7 @@ export function TaskRow({
                 : (Number(e.target.value) as WeekNumber)
             )
           }
-          className="min-w-0 flex-1 sm:flex-none sm:max-w-[7.5rem] rounded border border-line bg-surface px-1.5 py-1.5 sm:py-0.5 text-[11px] text-ink-muted outline-none"
+          className="min-w-0 flex-1 sm:flex-none sm:max-w-[7.5rem] rounded border border-accent bg-accent px-1.5 py-1.5 sm:py-0.5 text-[11px] font-medium text-black outline-none [color-scheme:light]"
           title="Assign week"
         >
           <option value="">Backlog</option>
@@ -142,17 +135,13 @@ export function TaskRow({
 
   return (
     <div
-      className={`group border-l-2 ${
-        task.priority === "critical"
-          ? overdue
-            ? "border-l-red-500 bg-red-500/[0.06]"
-            : "border-l-critical bg-critical-dim/40"
-          : task.assignee === "b"
-            ? "border-l-sky-500/50"
-            : task.assignee === "both"
-              ? "border-l-ink-dim/40"
-              : "border-l-transparent"
-      } ${dense ? "py-2 px-2 sm:py-1.5" : "py-2.5 px-3"} hover:bg-surface-hover/60 transition-colors`}
+      className={`group bg-transparent border-l-[3px] ${
+        overdue
+          ? "border-l-accent"
+          : task.priority === "critical"
+            ? "border-l-accent"
+            : "border-l-transparent"
+      } ${dense ? "py-2.5 px-3.5 sm:py-2.5" : "py-3 px-3.5"} hover:bg-white/[0.03] transition-colors`}
     >
       <div className="flex items-start gap-2.5 sm:gap-2">
         <button
@@ -172,10 +161,10 @@ export function TaskRow({
             </svg>
           )}
           {task.status === "in_progress" && (
-            <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
+            <span className="h-1.5 w-1.5 rounded-full bg-accent" />
           )}
           {task.status === "blocked" && (
-            <span className="text-[9px] leading-none text-red-300">!</span>
+            <span className="text-[9px] leading-none text-ink-muted">!</span>
           )}
         </button>
 
@@ -185,27 +174,23 @@ export function TaskRow({
               {task.title}
             </span>
             {task.priority === "critical" && (
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-critical">
+              <span className="rounded px-1 py-px text-[10px] font-semibold uppercase tracking-wider text-accent bg-accent/10">
                 IMP
               </span>
             )}
             {overdue && (
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-red-400">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-accent">
                 Overdue
               </span>
             )}
           </div>
 
           <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-ink-dim">
-            <span className={assigneeTone}>
-              {assigneeLabel(task.assignee, settings)}
-            </span>
+            <span>{assigneeLabel(task.assignee, settings)}</span>
             <span>·</span>
             <span>{categoryLabel(task.category)}</span>
             <span>·</span>
-            <span className={meta.className.replace("line-through decoration-ink-dim", "")}>
-              {meta.label}
-            </span>
+            <span>{meta.label}</span>
             {showWeek && (
               <>
                 <span>·</span>
@@ -225,18 +210,16 @@ export function TaskRow({
             {task.status === "blocked" && task.notes && (
               <>
                 <span>·</span>
-                <span className="text-red-400/80">Blocked: {task.notes}</span>
+                <span className="text-ink-muted">Blocked: {task.notes}</span>
               </>
             )}
           </div>
 
-          {/* Mobile: actions under content */}
           <div className="mt-2 flex flex-wrap items-center gap-1.5 sm:hidden">
             {controls}
           </div>
         </div>
 
-        {/* Desktop: actions on the right */}
         <div className="hidden sm:flex shrink-0 items-center gap-1 opacity-80 group-hover:opacity-100">
           {controls}
         </div>
@@ -249,7 +232,7 @@ export function TaskRow({
             value={blockReason}
             onChange={(e) => setBlockReason(e.target.value)}
             placeholder="What's blocking this?"
-            className="flex-1 rounded border border-line bg-surface px-2 py-2 sm:py-1 text-xs outline-none focus:border-red-500"
+            className="flex-1 rounded border border-line bg-surface-elevated px-2 py-2 sm:py-1 text-xs text-ink outline-none focus:border-accent"
           />
           <div className="flex gap-2">
             <button
@@ -258,7 +241,7 @@ export function TaskRow({
                 await onSetBlocked(task, blockReason.trim() || "Blocked");
                 setBlocking(false);
               }}
-              className="rounded bg-red-500/20 px-3 py-2 sm:py-1 text-xs text-red-400"
+              className="rounded bg-accent px-3 py-2 sm:py-1 text-xs font-medium text-black"
             >
               Save
             </button>

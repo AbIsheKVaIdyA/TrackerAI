@@ -73,7 +73,7 @@ export function SummaryView({
       <div className="mb-4 grid grid-cols-3 gap-2 sm:gap-3">
         <div className="border border-line bg-surface-elevated px-2 sm:px-3 py-2.5">
           <p className="text-[10px] sm:text-[11px] uppercase tracking-wide text-ink-dim">Done</p>
-          <p className="text-xl sm:text-2xl font-semibold tabular-nums text-green-400">
+          <p className="text-xl sm:text-2xl font-semibold tabular-nums text-ink">
             {done.length}
           </p>
         </div>
@@ -81,7 +81,7 @@ export function SummaryView({
           <p className="text-[10px] sm:text-[11px] uppercase tracking-wide text-ink-dim">
             Left
           </p>
-          <p className="text-xl sm:text-2xl font-semibold tabular-nums text-critical">
+          <p className="text-xl sm:text-2xl font-semibold tabular-nums text-ink">
             {unfinished.length}
           </p>
         </div>
@@ -98,7 +98,7 @@ export function SummaryView({
       </div>
 
       <section className="mb-5">
-        <h2 className="mb-1.5 text-sm font-semibold text-green-400">
+        <h2 className="mb-1.5 text-sm font-semibold text-ink">
           Completed · {weekDef.label}
         </h2>
         {done.length === 0 ? (
@@ -106,7 +106,7 @@ export function SummaryView({
             No completions logged for this week.
           </p>
         ) : (
-          <div className="divide-y divide-line-subtle border border-line bg-surface-elevated/50">
+          <div className="divide-y divide-line overflow-hidden rounded-task border border-line/80">
             {done.map((task) => (
               <TaskRow
                 key={task.id}
@@ -123,25 +123,25 @@ export function SummaryView({
 
       <section>
         <div className="mb-1.5 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-critical">
+          <h2 className="text-sm font-semibold text-ink">
             Unfinished · {weekDef.label}
           </h2>
           {unfinished.length > 0 && week < 5 && (
             <button
               type="button"
               onClick={pushAllUnfinished}
-              className="rounded border border-line px-2.5 py-1 text-xs text-ink-muted hover:border-critical hover:text-critical"
+              className="rounded border border-line px-2.5 py-1 text-xs text-ink-muted hover:border-ink hover:text-ink"
             >
               Push all to Week {week + 1}
             </button>
           )}
         </div>
         {unfinished.length === 0 ? (
-          <p className="border border-dashed border-green-500/30 px-3 py-4 text-sm text-green-400/80">
+          <p className="border border-dashed border-line px-3 py-4 text-sm text-ink-muted">
             Clean slate — everything assigned to this week is done.
           </p>
         ) : (
-          <div className="divide-y divide-line-subtle border border-line bg-surface-elevated/50">
+          <div className="divide-y divide-line overflow-hidden rounded-task border border-line/80">
             {unfinished.map((task) => (
               <TaskRow
                 key={task.id}

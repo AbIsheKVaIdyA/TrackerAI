@@ -86,7 +86,7 @@ export function CoupleSettingsModal({ open, settings, onClose, onSave }: Props) 
               required
               value={partnerBName}
               onChange={(e) => setPartnerBName(e.target.value)}
-              className="mt-1 w-full rounded border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-sky-500"
+              className="mt-1 w-full rounded border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-ink-muted"
             />
           </label>
         </div>

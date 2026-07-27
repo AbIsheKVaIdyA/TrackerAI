@@ -71,9 +71,9 @@ export function Nav({
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`rounded px-2.5 py-1.5 whitespace-nowrap transition-colors ${
+                  className={`rounded-full px-3 py-1.5 whitespace-nowrap transition-colors ${
                     active
-                      ? "bg-surface-hover text-ink"
+                      ? "bg-accent-dim text-accent-strong"
                       : "text-ink-muted hover:bg-surface-hover hover:text-ink"
                   }`}
                 >
@@ -86,26 +86,26 @@ export function Nav({
           <div className="ml-auto flex shrink-0 items-center gap-1.5">
             <span
               title={live ? "Realtime sync active" : "Connecting…"}
-              className={`inline-flex items-center gap-1 rounded px-1 py-0.5 text-[10px] uppercase tracking-wide ${
-                live ? "text-green-400/90" : "text-ink-dim"
+            className={`inline-flex items-center gap-1 rounded px-1 py-0.5 text-[10px] uppercase tracking-wide ${
+              live ? "text-ink-muted" : "text-ink-dim"
+            }`}
+          >
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                live ? "bg-ink" : "bg-ink-dim"
               }`}
-            >
-              <span
-                className={`h-1.5 w-1.5 rounded-full ${
-                  live ? "bg-green-400" : "bg-ink-dim"
-                }`}
-              />
-              <span className="hidden sm:inline">Live</span>
-            </span>
+            />
+            <span className="hidden sm:inline">Live</span>
+          </span>
 
             <div className="relative" ref={menuRef}>
               <button
                 type="button"
                 onClick={() => setOpen((v) => !v)}
-                className={`rounded border px-2 py-1.5 text-xs min-h-[32px] ${
+                className={`rounded-full border px-2.5 py-1.5 text-xs min-h-[32px] ${
                   me === "a"
-                    ? "border-critical/40 text-critical"
-                    : "border-sky-500/40 text-sky-300"
+                    ? "border-accent/50 text-accent-strong"
+                    : "border-ink-muted/40 text-ink-muted"
                 }`}
                 title="Switch profile"
               >
@@ -123,11 +123,7 @@ export function Nav({
                         setOpen(false);
                       }}
                       className={`flex w-full items-center justify-between px-3 py-2.5 text-left text-xs hover:bg-surface-hover ${
-                        me === id
-                          ? id === "a"
-                            ? "text-critical"
-                            : "text-sky-300"
-                          : "text-ink-muted"
+                        me === id ? "text-ink" : "text-ink-muted"
                       }`}
                     >
                       <span>{partnerName(id, settings)}</span>
@@ -150,7 +146,7 @@ export function Nav({
             <button
               type="button"
               onClick={onAdd}
-              className="rounded bg-ink px-2.5 sm:px-3 py-1.5 text-sm font-medium text-surface hover:bg-white transition-colors min-h-[32px]"
+              className="rounded-full bg-ink px-3 sm:px-3.5 py-1.5 text-sm font-medium text-surface hover:bg-white transition-colors min-h-[32px]"
             >
               <span className="sm:hidden">+</span>
               <span className="hidden sm:inline">+ Add task</span>
@@ -177,7 +173,7 @@ export function Nav({
               >
                 <span
                   className={`mx-auto mb-0.5 block h-0.5 w-5 rounded-full ${
-                    active ? "bg-critical" : "bg-transparent"
+                    active ? "bg-accent" : "bg-transparent"
                   }`}
                 />
                 {link.short}

@@ -14,7 +14,7 @@ export type WeekNumber = 1 | 2 | 3 | 4 | 5;
 export type PartnerId = "a" | "b";
 /** Who a task is assigned to */
 export type Assignee = PartnerId | "both";
-export type PersonFilter = "all" | PartnerId | "both" | "mine";
+export type PersonFilter = "all" | PartnerId | "both";
 
 export interface CoupleSettings {
   partnerAName: string;
@@ -91,15 +91,10 @@ export function assigneeLabel(
 
 export function taskVisibleTo(
   task: Task,
-  filter: PersonFilter,
-  me: PartnerId | null
+  filter: PersonFilter
 ): boolean {
   if (filter === "all") return true;
   if (filter === "both") return task.assignee === "both";
-  if (filter === "mine") {
-    if (!me) return true;
-    return task.assignee === me || task.assignee === "both";
-  }
   return task.assignee === filter || task.assignee === "both";
 }
 
