@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# August Execution Tracker
 
-## Getting Started
+Couple execution tracker for clearing tasks together before **Sep 1, 2026**. Both partners are full admins — add, edit, reassign, and monitor in realtime.
 
-First, run the development server:
+## Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Next.js 14 (App Router) + TypeScript
+- Tailwind CSS
+- Supabase (Postgres) via `@supabase/supabase-js` — shared table, no login accounts
+
+## Setup
+
+### 1. Supabase schema
+
+1. Create a project at [supabase.com](https://supabase.com).
+2. SQL Editor → run [`supabase/schema.sql`](./supabase/schema.sql) (fresh install), **or** if you already had the old single-user table, run [`supabase/migrate-couple.sql`](./supabase/migrate-couple.sql).
+
+**RLS:** Both scripts include a permissive `"allow all for anon"` policy. Without it, the app fails silently.
+
+### 2. Env
+
+Copy `.env.local.example` → `.env.local`:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Restart `npm run dev` after changing env. Share the same project URL + anon key with your partner.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Run
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install
+npm run dev
+```
 
-## Learn More
+On first open, each person picks who they are on that device.
 
-To learn more about Next.js, take a look at the following resources:
+## Couple features
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Both admins** — either person can add, edit status, reassign, push weeks
+- **Assigned to** — you / partner / both (shared)
+- **Filters** — All · Mine · each person · Shared
+- **Dual progress** on the dashboard
+- **Live sync** — green “Live” dot means realtime updates across devices
+- **Settings** — set both names (synced in Supabase)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Weeks
 
-## Deploy on Vercel
+| Week | Dates |
+|------|--------|
+| 1 | Jul 28 – Aug 3 |
+| 2 | Aug 4 – Aug 10 |
+| 3 | Aug 11 – Aug 17 |
+| 4 | Aug 18 – Aug 24 |
+| 5 | Aug 25 – Aug 31 |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Deadline: **Sep 1, 2026**.
