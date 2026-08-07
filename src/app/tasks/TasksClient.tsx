@@ -10,6 +10,7 @@ export function TasksClient() {
         visibleTasks,
         settings,
         me,
+        hasPartner,
         cycleStatus,
         setBlocked,
         setAssignee,
@@ -22,12 +23,13 @@ export function TasksClient() {
           tasks={visibleTasks}
           settings={settings}
           me={me}
+          hasPartner={hasPartner}
           onCycleStatus={cycleStatus}
           onSetBlocked={setBlocked}
           onSetAssignee={setAssignee}
           onSetDueDate={setDueDate}
           onEdit={openEditTask}
-          onPingPartner={pingPartnerForTask}
+          onPingPartner={hasPartner ? pingPartnerForTask : undefined}
           onSetPinned={setPinned}
         />
       )}

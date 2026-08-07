@@ -1,10 +1,11 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useUser } from "@clerk/nextjs";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { CoupleSettings, Workspace } from "@/lib/types";
 
-type Step = "landing" | "create" | "join" | "created";
+type Step = "choose" | "solo" | "couple" | "join" | "invite";
 
 interface Props {
   settings: CoupleSettings;
@@ -13,9 +14,10 @@ interface Props {
   needsMigration?: boolean;
   initialCode?: string;
   onCreate: (input: {
-    name: string;
-    partnerAName: string;
-    partnerBName: string;
+    mode: "solo" | "couple";
+    name?: string;
+    partnerAName?: string;
+    partnerBName?: string;
   }) => Promise<Workspace>;
   onJoin: (code: string) => Promise<Workspace>;
   onEnter: () => void;
@@ -34,15 +36,8 @@ export function WorkspaceEntry({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { user } = useUser();
   const onEnterRoute = pathname.startsWith("/enter");
-
-  function backToMarketing() {
-    if (onEnterRoute) {
-      router.push("/");
-      return;
-    }
-    setStep("landing");
-  }
 
   const codeFromUrl = useMemo(
     () => initialCode ?? searchParams.get("code") ?? "",
@@ -51,10 +46,11 @@ export function WorkspaceEntry({
   const stepFromUrl = searchParams.get("step");
 
   const [step, setStep] = useState<Step>(() => {
-    if (workspace) return "created";
     if (codeFromUrl) return "join";
-    if (stepFromUrl === "create" || stepFromUrl === "join") return stepFromUrl;
-    return "landing";
+    if (stepFromUrl === "create" || stepFromUrl === "couple") return "couple";
+    if (stepFromUrl === "solo") return "solo";
+    if (stepFromUrl === "join") return "join";
+    return "choose";
   });
   const [name, setName] = useState("");
   const [myName, setMyName] = useState("");
@@ -63,10 +59,10 @@ export function WorkspaceEntry({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<Workspace | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<"code" | "link" | null>(null);
 
   useEffect(() => {
-    if (workspace && step === "landing") {
+    if (workspace && step === "choose") {
       router.replace("/home");
     }
   }, [workspace, step, router]);
@@ -75,32 +71,50 @@ export function WorkspaceEntry({
     if (codeFromUrl) {
       setJoinCode(codeFromUrl);
       if (!workspace) setStep("join");
-    } else if (
-      !workspace &&
-      (stepFromUrl === "create" || stepFromUrl === "join")
-    ) {
-      setStep(stepFromUrl);
+    } else if (!workspace && stepFromUrl === "join") {
+      setStep("join");
+    } else if (!workspace && (stepFromUrl === "create" || stepFromUrl === "couple")) {
+      setStep("couple");
+    } else if (!workspace && stepFromUrl === "solo") {
+      setStep("solo");
     }
   }, [codeFromUrl, workspace, stepFromUrl]);
 
-  useEffect(() => {
-    if (onEnterRoute && step === "landing" && !workspace) {
-      router.replace("/");
+  async function handleSolo(e: FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      await onCreate({
+        mode: "solo",
+        name: name.trim() || undefined,
+        partnerAName:
+          myName.trim() ||
+          user?.firstName ||
+          user?.username ||
+          undefined,
+      });
+      onEnter();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not create");
+    } finally {
+      setBusy(false);
     }
-  }, [onEnterRoute, step, workspace, router]);
+  }
 
-  async function handleCreate(e: FormEvent) {
+  async function handleCouple(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError(null);
     try {
       const ws = await onCreate({
-        name,
-        partnerAName: myName,
-        partnerBName: partnerName,
+        mode: "couple",
+        name: name.trim() || undefined,
+        partnerAName: myName.trim(),
+        partnerBName: partnerName.trim(),
       });
       setCreated(ws);
-      setStep("created");
+      setStep("invite");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create");
     } finally {
@@ -128,13 +142,16 @@ export function WorkspaceEntry({
       ? `${window.location.origin}/enter?code=${activeWorkspace.inviteCode}`
       : "";
 
-  if (step === "landing") {
-    return (
-      <div className="min-h-screen bg-surface text-ink flex items-center justify-center text-sm text-ink-muted">
-        Loading…
-      </div>
-    );
-  }
+  const title =
+    step === "choose"
+      ? "How do you want to start?"
+      : step === "solo"
+        ? "Start on your own"
+        : step === "couple"
+          ? "Start with your partner"
+          : step === "join"
+            ? "Join with a code"
+            : "Invite your partner";
 
   return (
     <div className="relative min-h-screen min-h-dvh overflow-hidden bg-surface text-ink">
@@ -148,11 +165,7 @@ export function WorkspaceEntry({
           <p className="font-display text-3xl tracking-[-0.03em] text-ink">
             Tandem
           </p>
-          <p className="mt-2 text-sm text-ink-muted">
-            {step === "create" && "Create your shared space"}
-            {step === "join" && "Enter the invite code"}
-            {step === "created" && "Invite your person"}
-          </p>
+          <p className="mt-2 text-sm text-ink-muted">{title}</p>
         </div>
 
         {needsMigration && (
@@ -168,8 +181,109 @@ export function WorkspaceEntry({
           </div>
         )}
 
-        {step === "create" && (
-          <form onSubmit={handleCreate} className="space-y-4 animate-sheet-in">
+        {step === "choose" && (
+          <div className="space-y-3 animate-sheet-in">
+            <button
+              type="button"
+              onClick={() => {
+                setError(null);
+                setStep("solo");
+              }}
+              className="w-full rounded-2xl border border-line bg-surface-elevated/80 px-4 py-4 text-left transition-colors hover:border-accent/40"
+            >
+              <p className="font-display text-lg tracking-tight text-ink">
+                Just me
+              </p>
+              <p className="mt-1 text-sm text-ink-muted">
+                Personal board now. Invite a partner anytime.
+              </p>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setError(null);
+                setStep("couple");
+              }}
+              className="w-full rounded-2xl border border-line bg-surface-elevated/80 px-4 py-4 text-left transition-colors hover:border-accent/40"
+            >
+              <p className="font-display text-lg tracking-tight text-ink">
+                With my partner
+              </p>
+              <p className="mt-1 text-sm text-ink-muted">
+                Create a shared space and get an invite code.
+              </p>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setError(null);
+                setStep("join");
+              }}
+              className="w-full rounded-2xl border border-dashed border-line px-4 py-4 text-left transition-colors hover:border-accent/40"
+            >
+              <p className="font-display text-lg tracking-tight text-ink">
+                I have a code
+              </p>
+              <p className="mt-1 text-sm text-ink-muted">
+                Join a space your partner already created.
+              </p>
+            </button>
+            {onEnterRoute && (
+              <button
+                type="button"
+                onClick={() => router.push("/")}
+                className="w-full pt-2 text-sm text-ink-dim"
+              >
+                Back
+              </button>
+            )}
+          </div>
+        )}
+
+        {step === "solo" && (
+          <form onSubmit={handleSolo} className="space-y-4 animate-sheet-in">
+            <label className="block">
+              <span className="text-[11px] uppercase tracking-wide text-ink-dim">
+                Your name
+              </span>
+              <input
+                value={myName}
+                onChange={(e) => setMyName(e.target.value)}
+                placeholder={user?.firstName || "Your name"}
+                className="mt-1 w-full rounded-xl border border-line bg-surface-elevated px-3 py-2.5 text-sm outline-none focus:border-accent placeholder:text-ink-dim/50"
+              />
+            </label>
+            <label className="block">
+              <span className="text-[11px] uppercase tracking-wide text-ink-dim">
+                Space name
+              </span>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Optional"
+                className="mt-1 w-full rounded-xl border border-line bg-surface-elevated px-3 py-2.5 text-sm outline-none focus:border-accent placeholder:text-ink-dim/50"
+              />
+            </label>
+            {error && <p className="text-sm text-red-400">{error}</p>}
+            <button
+              type="submit"
+              disabled={busy}
+              className="w-full rounded-full bg-ink py-3.5 text-sm font-medium text-surface disabled:opacity-40"
+            >
+              {busy ? "Creating…" : "Enter my space"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setStep("choose")}
+              className="w-full text-sm text-ink-dim"
+            >
+              Back
+            </button>
+          </form>
+        )}
+
+        {step === "couple" && (
+          <form onSubmit={handleCouple} className="space-y-4 animate-sheet-in">
             <label className="block">
               <span className="text-[11px] uppercase tracking-wide text-ink-dim">
                 Space name
@@ -213,11 +327,11 @@ export function WorkspaceEntry({
               disabled={busy}
               className="w-full rounded-full bg-ink py-3.5 text-sm font-medium text-surface disabled:opacity-40"
             >
-              {busy ? "Creating…" : "Create space"}
+              {busy ? "Creating…" : "Create shared space"}
             </button>
             <button
               type="button"
-              onClick={backToMarketing}
+              onClick={() => setStep("choose")}
               className="w-full text-sm text-ink-dim"
             >
               Back
@@ -236,7 +350,7 @@ export function WorkspaceEntry({
                 value={joinCode}
                 onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
                 placeholder="e.g. AB12CD34"
-                className="mt-1 w-full rounded-xl border border-line bg-surface-elevated px-3 py-2.5 text-sm tracking-widest uppercase outline-none focus:border-accent"
+                className="mt-1 w-full rounded-xl border border-line bg-surface-elevated px-3 py-2.5 text-sm tracking-widest uppercase outline-none focus:border-accent placeholder:text-ink-dim/50"
               />
             </label>
             {error && <p className="text-sm text-red-400">{error}</p>}
@@ -249,7 +363,7 @@ export function WorkspaceEntry({
             </button>
             <button
               type="button"
-              onClick={backToMarketing}
+              onClick={() => setStep("choose")}
               className="w-full text-sm text-ink-dim"
             >
               Back
@@ -257,33 +371,48 @@ export function WorkspaceEntry({
           </form>
         )}
 
-        {step === "created" && activeWorkspace && (
+        {step === "invite" && activeWorkspace && (
           <div className="space-y-4 text-center animate-sheet-in">
             <p className="text-sm text-ink-muted">
-              Space ready. Share this code with your partner. They sign in and
-              join:
+              Space ready. Share this with your partner so they can join:
             </p>
             <p className="font-display text-3xl tracking-[0.2em] text-accent-strong">
               {activeWorkspace.inviteCode}
             </p>
-            <button
-              type="button"
-              onClick={async () => {
-                try {
-                  await navigator.clipboard.writeText(inviteLink);
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 1500);
-                } catch {
-                  await navigator.clipboard.writeText(
-                    activeWorkspace.inviteCode
-                  );
-                  setCopied(true);
-                }
-              }}
-              className="w-full rounded-full border border-line py-3 text-sm text-ink"
-            >
-              {copied ? "Copied" : "Copy invite link"}
-            </button>
+            <div className="grid gap-2">
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(
+                      activeWorkspace.inviteCode
+                    );
+                    setCopied("code");
+                    setTimeout(() => setCopied(null), 1500);
+                  } catch {
+                    /* ignore */
+                  }
+                }}
+                className="w-full rounded-full border border-line py-3 text-sm text-ink"
+              >
+                {copied === "code" ? "Code copied" : "Copy invite code"}
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(inviteLink);
+                    setCopied("link");
+                    setTimeout(() => setCopied(null), 1500);
+                  } catch {
+                    /* ignore */
+                  }
+                }}
+                className="w-full rounded-full border border-line py-3 text-sm text-ink"
+              >
+                {copied === "link" ? "Link copied" : "Copy invite link"}
+              </button>
+            </div>
             <button
               type="button"
               onClick={() => onEnter()}
@@ -296,8 +425,7 @@ export function WorkspaceEntry({
               onClick={() => {
                 setCreated(null);
                 void onLeave();
-                if (onEnterRoute) router.push("/");
-                else setStep("landing");
+                setStep("choose");
               }}
               className="w-full text-center text-xs text-ink-dim"
             >

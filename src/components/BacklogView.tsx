@@ -7,6 +7,7 @@ interface Props {
   tasks: Task[];
   settings: CoupleSettings;
   me: PartnerId;
+  hasPartner?: boolean;
   onCycleStatus: (task: Task) => Promise<unknown>;
   onSetBlocked: (task: Task, reason: string) => Promise<unknown>;
   onSetAssignee: (id: string, assignee: Assignee) => Promise<unknown>;
@@ -20,6 +21,7 @@ export function BacklogView({
   tasks,
   settings,
   me,
+  hasPartner = true,
   onCycleStatus,
   onSetBlocked,
   onSetAssignee,
@@ -53,6 +55,7 @@ export function BacklogView({
               task={task}
               settings={settings}
               me={me}
+              hasPartner={hasPartner}
               onCycleStatus={onCycleStatus}
               onSetBlocked={onSetBlocked}
               onSetAssignee={onSetAssignee}

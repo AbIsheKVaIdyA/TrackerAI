@@ -13,6 +13,7 @@ export function HomeClient() {
         me,
         workspace,
         pings,
+        hasPartner,
         cycleStatus,
         setBlocked,
         setAssignee,
@@ -31,6 +32,7 @@ export function HomeClient() {
           me={me}
           workspace={workspace}
           pings={pings}
+          hasPartner={hasPartner}
           onCycleStatus={cycleStatus}
           onSetBlocked={setBlocked}
           onSetAssignee={setAssignee}
@@ -38,7 +40,7 @@ export function HomeClient() {
           onSetPinned={setPinned}
           onEditTask={openEditTask}
           onEditEvent={openEditEvent}
-          onPingPartner={pingPartnerForTask}
+          onPingPartner={hasPartner ? pingPartnerForTask : undefined}
           onDismissPing={dismissPing}
           onToggleFairness={setShowFairness}
         />

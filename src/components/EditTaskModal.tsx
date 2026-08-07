@@ -21,6 +21,7 @@ interface Props {
   settings: CoupleSettings;
   me: PartnerId;
   workspaceId?: string | null;
+  hasPartner?: boolean;
   onClose: () => void;
   onSave: (id: string, patch: Partial<Task>) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
@@ -41,6 +42,7 @@ export function EditTaskModal({
   settings,
   me,
   workspaceId,
+  hasPartner = true,
   onClose,
   onSave,
   onDelete,
@@ -192,12 +194,18 @@ export function EditTaskModal({
             Assigned to
           </span>
           <div className="mt-1 flex gap-1">
-            {(
-              [
-                { value: "a" as const, label: settings.partnerAName },
-                { value: "b" as const, label: settings.partnerBName },
-                { value: "both" as const, label: "Together" },
-              ] as const
+            {(hasPartner
+              ? ([
+                  { value: "a" as const, label: settings.partnerAName },
+                  { value: "b" as const, label: settings.partnerBName },
+                  { value: "both" as const, label: "Together" },
+                ] as const)
+              : ([
+                  {
+                    value: me,
+                    label: me === "a" ? settings.partnerAName : settings.partnerBName,
+                  },
+                ] as const)
             ).map((opt) => (
               <button
                 key={opt.value}

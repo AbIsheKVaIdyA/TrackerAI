@@ -38,6 +38,7 @@ interface Props {
   task: Task;
   settings: CoupleSettings;
   me: PartnerId;
+  hasPartner?: boolean;
   onCycleStatus: (task: Task) => Promise<unknown>;
   onSetBlocked: (task: Task, reason: string) => Promise<unknown>;
   onSetAssignee?: (id: string, assignee: Assignee) => Promise<unknown>;
@@ -52,6 +53,7 @@ export function TaskRow({
   task,
   settings,
   me,
+  hasPartner = true,
   onCycleStatus,
   onSetBlocked,
   onSetAssignee,
@@ -190,7 +192,7 @@ export function TaskRow({
                   Edit
                 </MenuItem>
               )}
-              {onSetAssignee && (
+              {onSetAssignee && hasPartner && (
                 <div className="px-2 py-1.5">
                   <p className="mb-1 px-1 text-[10px] uppercase tracking-wide text-ink-dim">
                     Who

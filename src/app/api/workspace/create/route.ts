@@ -14,6 +14,7 @@ export async function POST(req: Request) {
   }
 
   let body: {
+    mode?: "solo" | "couple";
     name?: string;
     myName?: string;
     partnerName?: string;
@@ -24,6 +25,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
+  const mode = body.mode === "solo" ? "solo" : "couple";
   const supabase = createServerSupabase();
 
   const { data: existing } = await supabase
@@ -44,9 +46,24 @@ export async function POST(req: Request) {
     body.myName?.trim() ||
     user?.firstName ||
     user?.username ||
-    "Partner A";
-  const partnerName = body.partnerName?.trim() || "Partner B";
-  const name = body.name?.trim() || "Tandem";
+    "You";
+  const partnerName =
+    mode === "solo"
+      ? "Partner"
+      : body.partnerName?.trim() || "Partner";
+  const name =
+    body.name?.trim() ||
+    (mode === "solo" ? `${myName}'s space` : "Tandem");
+
+  if (mode === "couple" && !body.myName?.trim()) {
+    return NextResponse.json({ error: "Enter your name" }, { status: 400 });
+  }
+  if (mode === "couple" && !body.partnerName?.trim()) {
+    return NextResponse.json(
+      { error: "Enter your partner's name" },
+      { status: 400 }
+    );
+  }
 
   let workspace: WorkspaceRow | null = null;
   let lastError = "Could not create workspace";
@@ -116,6 +133,7 @@ export async function POST(req: Request) {
       partnerId: "a" as const,
       settings: workspaceToSettings(workspace),
       memberCount: 1,
+      mode,
     },
   });
 }

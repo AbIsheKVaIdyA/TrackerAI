@@ -16,6 +16,7 @@ interface Props {
   onClose: () => void;
   settings: CoupleSettings;
   me: PartnerId;
+  hasPartner?: boolean;
   event?: CalendarEvent | null;
   defaults?: { startsAt?: string };
   onSubmit: (input: NewEventInput) => Promise<void>;
@@ -38,6 +39,7 @@ export function EventModal({
   onClose,
   settings,
   me,
+  hasPartner = true,
   event,
   defaults,
   onSubmit,
@@ -177,12 +179,18 @@ export function EventModal({
         <div className="mb-3">
           <span className="text-xs text-ink-muted uppercase tracking-wide">Who</span>
           <div className="mt-1 flex gap-1">
-            {(
-              [
-                { value: "a" as const, label: settings.partnerAName },
-                { value: "b" as const, label: settings.partnerBName },
-                { value: "both" as const, label: "Together" },
-              ] as const
+            {(hasPartner
+              ? ([
+                  { value: "a" as const, label: settings.partnerAName },
+                  { value: "b" as const, label: settings.partnerBName },
+                  { value: "both" as const, label: "Together" },
+                ] as const)
+              : ([
+                  {
+                    value: me,
+                    label: me === "a" ? settings.partnerAName : settings.partnerBName,
+                  },
+                ] as const)
             ).map((opt) => (
               <button
                 key={opt.value}

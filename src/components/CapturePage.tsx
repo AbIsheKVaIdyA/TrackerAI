@@ -35,6 +35,7 @@ type Mode = "task" | "event";
 interface Props {
   settings: CoupleSettings;
   me: PartnerId;
+  hasPartner?: boolean;
   initialMode?: Mode;
   eventDefaults?: { startsAt?: string };
   onAddTask: (input: NewTaskInput) => Promise<unknown>;
@@ -104,6 +105,7 @@ function Chip({
 export function CapturePage({
   settings,
   me,
+  hasPartner = true,
   initialMode = "task",
   eventDefaults,
   onAddTask,
@@ -582,24 +584,29 @@ export function CapturePage({
         >
           Mine ({me === "a" ? settings.partnerAName : settings.partnerBName})
         </Chip>
-        <Chip
-          active={assignee === other}
-          onClick={() => {
-            manualRef.current.assignee = true;
-            setAssignee(other);
-          }}
-        >
-          Yours ({other === "a" ? settings.partnerAName : settings.partnerBName})
-        </Chip>
-        <Chip
-          active={assignee === "both"}
-          onClick={() => {
-            manualRef.current.assignee = true;
-            setAssignee("both");
-          }}
-        >
-          Together
-        </Chip>
+        {hasPartner && (
+          <>
+            <Chip
+              active={assignee === other}
+              onClick={() => {
+                manualRef.current.assignee = true;
+                setAssignee(other);
+              }}
+            >
+              Yours (
+              {other === "a" ? settings.partnerAName : settings.partnerBName})
+            </Chip>
+            <Chip
+              active={assignee === "both"}
+              onClick={() => {
+                manualRef.current.assignee = true;
+                setAssignee("both");
+              }}
+            >
+              Together
+            </Chip>
+          </>
+        )}
       </ChipRow>
 
       {/* 4) When */}

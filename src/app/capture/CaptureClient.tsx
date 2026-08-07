@@ -17,10 +17,11 @@ export function CaptureClient() {
 
   return (
     <AppShell showFilter={false}>
-      {({ settings, me, addTask, addEvent }) => (
+      {({ settings, me, hasPartner, addTask, addEvent }) => (
         <CapturePage
           settings={settings}
           me={me}
+          hasPartner={hasPartner}
           initialMode={initialMode}
           eventDefaults={eventDefaults}
           onAddTask={addTask}

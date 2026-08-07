@@ -299,6 +299,7 @@ export function AppShell({ children, showFilter = true }: Props) {
               <PersonFilterBar
                 filter={couple.filter}
                 onChange={couple.setFilter}
+                hasPartner={couple.hasPartner}
               />
             )}
             {children(ctx)}
@@ -312,6 +313,7 @@ export function AppShell({ children, showFilter = true }: Props) {
         settings={couple.settings}
         me={me}
         workspaceId={couple.workspaceId}
+        hasPartner={couple.hasPartner}
         onClose={() => setEditTask(null)}
         onSave={async (id, patch) => {
           await tasksApi.updateTask(id, patch);
@@ -323,15 +325,19 @@ export function AppShell({ children, showFilter = true }: Props) {
           const copy = await tasksApi.duplicateTask(task);
           setEditTask(copy);
         }}
-        onSendPing={async (message, taskId) => {
-          if (!me) return;
-          const to: PartnerId = me === "a" ? "b" : "a";
-          await sendPing({
-            toPartner: to,
-            message,
-            taskId,
-          });
-        }}
+        onSendPing={
+          couple.hasPartner
+            ? async (message, taskId) => {
+                if (!me) return;
+                const to: PartnerId = me === "a" ? "b" : "a";
+                await sendPing({
+                  toPartner: to,
+                  message,
+                  taskId,
+                });
+              }
+            : undefined
+        }
       />
 
       <EventModal
@@ -339,6 +345,7 @@ export function AppShell({ children, showFilter = true }: Props) {
         event={editEvent}
         settings={couple.settings}
         me={me}
+        hasPartner={couple.hasPartner}
         onClose={() => setEditEvent(null)}
         onSubmit={async (input) => {
           if (!editEvent) return;
@@ -365,6 +372,7 @@ export function AppShell({ children, showFilter = true }: Props) {
         open={settingsOpen}
         settings={couple.settings}
         workspace={couple.workspace}
+        hasPartner={couple.hasPartner}
         onClose={() => setSettingsOpen(false)}
         onSave={couple.saveSettings}
         onToggleFairness={couple.setShowFairness}

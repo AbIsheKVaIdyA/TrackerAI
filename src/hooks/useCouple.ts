@@ -38,12 +38,14 @@ function applyMembership(
     setWorkspaceId: (id: string) => void;
     setWorkspace: (w: Workspace) => void;
     setSettings: (s: CoupleSettings) => void;
+    setMemberCount: (n: number) => void;
   }
 ) {
   setters.setMe(m.partnerId);
   setters.setWorkspaceId(m.workspace.id);
   setters.setWorkspace(m.workspace);
   setters.setSettings(m.settings);
+  setters.setMemberCount(m.memberCount ?? 1);
   setStoredWorkspaceId(m.workspace.id);
   setStoredIdentity(m.partnerId);
 }
@@ -59,6 +61,7 @@ export function useCouple() {
   const [needsWorkspaceMigration, setNeedsWorkspaceMigration] = useState(false);
   const [filter, setFilterState] = useState<PersonFilter>("all");
   const [live, setLive] = useState(false);
+  const [memberCount, setMemberCount] = useState(0);
 
   useEffect(() => {
     const storedFilter = getStoredFilter();
@@ -82,6 +85,7 @@ export function useCouple() {
       setMe(null);
       setWorkspaceId(null);
       setWorkspace(null);
+      setMemberCount(0);
       setSettings(DEFAULT_COUPLE);
       setReady(true);
       return;
@@ -96,6 +100,7 @@ export function useCouple() {
         setMe(null);
         setWorkspaceId(null);
         setWorkspace(null);
+        setMemberCount(0);
         setReady(true);
         return;
       }
@@ -113,6 +118,7 @@ export function useCouple() {
         setMe(null);
         setWorkspaceId(null);
         setWorkspace(null);
+        setMemberCount(0);
         setSettings(DEFAULT_COUPLE);
         setReady(true);
         return;
@@ -123,6 +129,7 @@ export function useCouple() {
         setWorkspaceId,
         setWorkspace,
         setSettings,
+        setMemberCount,
       });
       setReady(true);
     } catch (e) {
@@ -180,14 +187,16 @@ export function useCouple() {
 
   const createWorkspace = useCallback(
     async (input: {
-      name: string;
-      partnerAName: string;
-      partnerBName: string;
+      mode: "solo" | "couple";
+      name?: string;
+      partnerAName?: string;
+      partnerBName?: string;
     }) => {
       const res = await fetch("/api/workspace/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          mode: input.mode,
           name: input.name,
           myName: input.partnerAName,
           partnerName: input.partnerBName,
@@ -206,6 +215,7 @@ export function useCouple() {
         setWorkspaceId,
         setWorkspace,
         setSettings,
+        setMemberCount,
       });
       setNeedsWorkspaceMigration(false);
       return m.workspace;
@@ -232,6 +242,7 @@ export function useCouple() {
       setWorkspaceId,
       setWorkspace,
       setSettings,
+      setMemberCount,
     });
     setNeedsWorkspaceMigration(false);
     return m.workspace;
@@ -247,6 +258,7 @@ export function useCouple() {
     setMe(null);
     setWorkspaceId(null);
     setWorkspace(null);
+    setMemberCount(0);
     setSettings(DEFAULT_COUPLE);
   }, []);
 
@@ -263,10 +275,35 @@ export function useCouple() {
     await leaveWorkspace();
   }, [workspaceId, leaveWorkspace]);
 
-  const setFilter = useCallback((f: PersonFilter) => {
-    setFilterState(f);
-    setStoredFilter(f);
-  }, []);
+  const hasPartner = memberCount >= 2;
+
+  const setFilter = useCallback(
+    (f: PersonFilter) => {
+      // Solo spaces: no Yours / Together filters
+      if (
+        memberCount < 2 &&
+        (f === "yours" || f === "together" || f === "both")
+      ) {
+        setFilterState("all");
+        setStoredFilter("all");
+        return;
+      }
+      setFilterState(f);
+      setStoredFilter(f);
+    },
+    [memberCount]
+  );
+
+  useEffect(() => {
+    if (
+      memberCount > 0 &&
+      memberCount < 2 &&
+      (filter === "yours" || filter === "together" || filter === "both")
+    ) {
+      setFilterState("all");
+      setStoredFilter("all");
+    }
+  }, [memberCount, filter]);
 
   const saveSettings = useCallback(
     async (next: CoupleSettings) => {
@@ -334,6 +371,8 @@ export function useCouple() {
     setFilter,
     live,
     setLive,
+    memberCount,
+    hasPartner,
     createWorkspace,
     joinWorkspace,
     leaveWorkspace,

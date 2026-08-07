@@ -8,6 +8,7 @@ interface Props {
   open: boolean;
   settings: CoupleSettings;
   workspace: Workspace | null;
+  hasPartner?: boolean;
   onClose: () => void;
   onSave: (next: CoupleSettings) => Promise<void>;
   onToggleFairness?: (show: boolean) => Promise<void>;
@@ -19,6 +20,7 @@ export function CoupleSettingsModal({
   open,
   settings,
   workspace,
+  hasPartner = true,
   onClose,
   onSave,
   onToggleFairness,
@@ -54,7 +56,11 @@ export function CoupleSettingsModal({
     setSaving(true);
     setError(null);
     try {
-      await onSave({ partnerAName, partnerBName, coupleLabel });
+      await onSave({
+        partnerAName,
+        partnerBName: hasPartner ? partnerBName : partnerAName,
+        coupleLabel,
+      });
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed");
@@ -94,8 +100,37 @@ export function CoupleSettingsModal({
         <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-line sm:hidden" />
         <h2 className="text-base font-semibold mb-1">Workspace</h2>
         <p className="text-xs text-ink-muted mb-4">
-          Names, invite code, and space controls.
+          {hasPartner
+            ? "Names, invite code, and space controls."
+            : "Your space. Invite a partner anytime with the code below."}
         </p>
+
+        {workspace && !hasPartner && (
+          <div className="mb-4 rounded-xl border border-accent/35 bg-accent-dim/40 px-3 py-3">
+            <p className="text-[11px] uppercase tracking-wide text-accent">
+              Invite partner
+            </p>
+            <p className="mt-1 font-display text-2xl tracking-[0.18em] text-accent-strong">
+              {workspace.inviteCode}
+            </p>
+            <p className="mt-1 text-[11px] text-ink-dim break-all">{inviteLink}</p>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(inviteLink);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 1500);
+                } catch {
+                  /* ignore */
+                }
+              }}
+              className="mt-2 text-xs text-ink-muted hover:text-ink"
+            >
+              {copied ? "Link copied" : "Copy invite link"}
+            </button>
+          </div>
+        )}
 
         <label className="block mb-3">
           <span className="text-xs text-ink-muted uppercase tracking-wide">
@@ -108,10 +143,12 @@ export function CoupleSettingsModal({
           />
         </label>
 
-        <div className="grid grid-cols-2 gap-3 mb-4">
+        <div
+          className={`grid gap-3 mb-4 ${hasPartner ? "grid-cols-2" : "grid-cols-1"}`}
+        >
           <label className="block">
             <span className="text-xs text-ink-muted uppercase tracking-wide">
-              Partner A
+              {hasPartner ? "Partner A" : "Your name"}
             </span>
             <input
               required
@@ -120,20 +157,22 @@ export function CoupleSettingsModal({
               className="mt-1 w-full rounded border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-accent"
             />
           </label>
-          <label className="block">
-            <span className="text-xs text-ink-muted uppercase tracking-wide">
-              Partner B
-            </span>
-            <input
-              required
-              value={partnerBName}
-              onChange={(e) => setPartnerBName(e.target.value)}
-              className="mt-1 w-full rounded border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-accent"
-            />
-          </label>
+          {hasPartner && (
+            <label className="block">
+              <span className="text-xs text-ink-muted uppercase tracking-wide">
+                Partner B
+              </span>
+              <input
+                required
+                value={partnerBName}
+                onChange={(e) => setPartnerBName(e.target.value)}
+                className="mt-1 w-full rounded border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-accent"
+              />
+            </label>
+          )}
         </div>
 
-        {workspace && (
+        {workspace && hasPartner && (
           <div className="mb-4 rounded-xl border border-line bg-surface px-3 py-3">
             <p className="text-[11px] uppercase tracking-wide text-ink-dim">
               Invite code
@@ -159,7 +198,7 @@ export function CoupleSettingsModal({
           </div>
         )}
 
-        {workspace && onToggleFairness && (
+        {workspace && hasPartner && onToggleFairness && (
           <label className="mb-4 flex items-start gap-3 rounded-xl border border-line bg-surface px-3 py-3">
             <input
               type="checkbox"

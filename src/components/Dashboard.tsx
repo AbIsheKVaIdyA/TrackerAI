@@ -36,6 +36,7 @@ interface Props {
   me: PartnerId;
   workspace: Workspace | null;
   pings: PartnerPing[];
+  hasPartner?: boolean;
   onCycleStatus: (task: Task) => Promise<unknown>;
   onSetBlocked: (task: Task, reason: string) => Promise<unknown>;
   onSetAssignee: (id: string, assignee: Assignee) => Promise<unknown>;
@@ -63,6 +64,7 @@ export function Dashboard({
   me,
   workspace,
   pings,
+  hasPartner = true,
   onCycleStatus,
   onSetBlocked,
   onSetAssignee,
@@ -125,6 +127,7 @@ export function Dashboard({
   const rowProps = {
     settings,
     me,
+    hasPartner,
     onCycleStatus,
     onSetBlocked,
     onSetAssignee,
@@ -137,6 +140,7 @@ export function Dashboard({
   const loadB = openFor(tasks, "b").length;
   const loadBoth = togetherOpen.length;
   const loadTotal = loadA + loadB + loadBoth || 1;
+  const fairnessOn = hasPartner && showFairness;
 
   return (
     <div className="space-y-5">
@@ -168,6 +172,22 @@ export function Dashboard({
         settings={settings}
         me={me}
       />
+
+      {!hasPartner && workspace && (
+        <section className="border border-accent/30 bg-accent-dim/40 rounded-task px-3.5 py-3.5 space-y-2">
+          <p className="text-sm font-medium text-accent-strong">
+            Invite your partner when you&apos;re ready
+          </p>
+          <p className="text-xs text-ink-muted">
+            Code{" "}
+            <span className="font-mono tracking-widest text-ink">
+              {workspace.inviteCode}
+            </span>
+            {" · "}
+            share from Settings anytime.
+          </p>
+        </section>
+      )}
 
       {pings.length > 0 && (
         <div className="border border-accent/40 bg-accent-dim px-3.5 py-3 rounded-task space-y-2">
@@ -304,18 +324,31 @@ export function Dashboard({
       {/* Split view */}
       <section>
         <h2 className="mb-2 text-sm font-semibold text-ink">At a glance</h2>
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div
+          className={`grid gap-3 ${
+            hasPartner ? "sm:grid-cols-3" : "sm:grid-cols-1 max-w-sm"
+          }`}
+        >
           {(
-            [
-              { key: "mine", label: "Mine", list: mineOpen, tone: "mine" },
-              { key: "yours", label: "Yours", list: yoursOpen, tone: "yours" },
-              {
-                key: "together",
-                label: "Together",
-                list: togetherOpen,
-                tone: "together",
-              },
-            ] as const
+            hasPartner
+              ? ([
+                  { key: "mine", label: "Mine", list: mineOpen, tone: "mine" },
+                  {
+                    key: "yours",
+                    label: "Yours",
+                    list: yoursOpen,
+                    tone: "yours",
+                  },
+                  {
+                    key: "together",
+                    label: "Together",
+                    list: togetherOpen,
+                    tone: "together",
+                  },
+                ] as const)
+              : ([
+                  { key: "mine", label: "Mine", list: mineOpen, tone: "mine" },
+                ] as const)
           ).map((col) => (
             <div
               key={col.key}
@@ -348,7 +381,7 @@ export function Dashboard({
         </div>
       </section>
 
-      {showFairness && (
+      {fairnessOn && (
         <section className="border border-line/80 rounded-task px-3.5 py-3">
           <div className="flex items-center justify-between gap-2 mb-2">
             <p className="text-xs text-ink-muted">
@@ -388,15 +421,15 @@ export function Dashboard({
         </section>
       )}
 
-      {showFairness && (
+      {fairnessOn && (
         <AiFairnessCard
           tasks={tasks}
           settings={settings}
-          enabled={showFairness}
+          enabled={fairnessOn}
         />
       )}
 
-      {!showFairness && onToggleFairness && (
+      {hasPartner && !showFairness && onToggleFairness && (
         <button
           type="button"
           onClick={() => void onToggleFairness(true)}
@@ -406,7 +439,11 @@ export function Dashboard({
         </button>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div
+        className={`grid gap-3 ${
+          hasPartner ? "sm:grid-cols-3" : "sm:grid-cols-1 max-w-sm"
+        }`}
+      >
         <div className="flex items-center gap-3 border border-line bg-surface-elevated px-3.5 py-3.5 rounded-task">
           <ProgressRing percent={overall.percent} size={64} stroke={7} label="done" />
           <div>
@@ -416,28 +453,32 @@ export function Dashboard({
             </p>
           </div>
         </div>
-        <div className="border border-line bg-surface-elevated px-3.5 py-3.5 rounded-task">
-          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-accent">
-            {settings.partnerAName}
-          </p>
-          <p className="mt-1 text-2xl font-semibold tabular-nums text-ink">
-            {Math.round(progressA.percent)}%
-          </p>
-        </div>
-        <div className="border border-line bg-surface-elevated px-3.5 py-3.5 rounded-task">
-          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-accent">
-            {settings.partnerBName}
-          </p>
-          <p className="mt-1 text-2xl font-semibold tabular-nums text-ink">
-            {Math.round(progressB.percent)}%
-          </p>
-        </div>
+        {hasPartner && (
+          <>
+            <div className="border border-line bg-surface-elevated px-3.5 py-3.5 rounded-task">
+              <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-accent">
+                {settings.partnerAName}
+              </p>
+              <p className="mt-1 text-2xl font-semibold tabular-nums text-ink">
+                {Math.round(progressA.percent)}%
+              </p>
+            </div>
+            <div className="border border-line bg-surface-elevated px-3.5 py-3.5 rounded-task">
+              <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-accent">
+                {settings.partnerBName}
+              </p>
+              <p className="mt-1 text-2xl font-semibold tabular-nums text-ink">
+                {Math.round(progressB.percent)}%
+              </p>
+            </div>
+          </>
+        )}
       </div>
 
       {needsHelp.length > 0 && (
         <section>
           <h2 className="mb-1.5 text-sm font-semibold text-ink">
-            Blocked: help each other
+            {hasPartner ? "Blocked: help each other" : "Blocked"}
           </h2>
           <div className="divide-y divide-line overflow-hidden rounded-task border border-line/80">
             {needsHelp.map((task) => (
@@ -501,7 +542,7 @@ export function Dashboard({
         )}
       </section>
 
-      {partnerBusy.length > 0 && (
+      {hasPartner && partnerBusy.length > 0 && (
         <section>
           <h2 className="mb-1.5 text-sm font-semibold text-ink">
             In progress · {otherName}
