@@ -59,11 +59,6 @@ export function Nav({
     setMoreOpen(false);
   }, [pathname]);
 
-  const brandShort =
-    settings.coupleLabel.length > 16
-      ? settings.coupleLabel.slice(0, 14) + "…"
-      : settings.coupleLabel;
-
   const moreActive =
     MORE_LINKS.some((l) => pathname.startsWith(l.href)) || moreOpen;
 
@@ -73,11 +68,9 @@ export function Nav({
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-3 py-2.5 sm:px-4">
           <Link
             href="/home"
-            className="min-w-0 shrink font-display text-lg sm:text-xl tracking-tight text-ink truncate"
-            title={settings.coupleLabel}
+            className="shrink-0 font-display text-lg sm:text-xl tracking-tight text-ink"
           >
-            <span className="sm:hidden">{brandShort}</span>
-            <span className="hidden sm:inline">{settings.coupleLabel}</span>
+            Tandem
           </Link>
 
           <nav className="hidden md:flex flex-1 items-center gap-0.5 overflow-x-auto text-sm">
@@ -233,7 +226,7 @@ export function Nav({
             <div className="mb-3 flex items-center justify-between rounded-xl border border-line/60 bg-surface/80 px-3.5 py-3">
               <div className="min-w-0">
                 <p className="text-[11px] uppercase tracking-[0.12em] text-ink-dim">
-                  Account
+                  {settings.coupleLabel}
                 </p>
                 <p className="mt-1 truncate text-sm text-ink">{displayName}</p>
               </div>

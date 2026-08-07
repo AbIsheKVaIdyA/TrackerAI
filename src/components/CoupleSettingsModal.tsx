@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import Link from "next/link";
 import type { CoupleSettings, Workspace } from "@/lib/types";
 
 interface Props {
@@ -214,20 +213,6 @@ export function CoupleSettingsModal({
             </span>
           </label>
         )}
-
-        <div className="mb-4 rounded-xl border border-line bg-surface px-3 py-3 space-y-2">
-          <p className="text-sm text-ink">Shortcuts</p>
-          <p className="text-[11px] text-ink-dim">
-            Search anywhere with ⌘K / Ctrl+K. Shared lists live at{" "}
-            <Link href="/lists" className="text-accent-strong hover:underline" onClick={onClose}>
-              /lists
-            </Link>
-            .
-          </p>
-          <p className="text-[11px] text-ink-dim">
-            Install: Safari Share → Add to Home Screen · Chrome → Install app.
-          </p>
-        </div>
 
         {error && <p className="mb-3 text-sm text-red-400">{error}</p>}
 

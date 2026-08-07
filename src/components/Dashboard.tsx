@@ -144,26 +144,21 @@ export function Dashboard({
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-end justify-between gap-3 pt-0.5">
-        <div>
-          <p className="font-display text-2xl sm:text-[2rem] tracking-tight text-ink">
-            Hey, {myName}
-          </p>
-          <p className="mt-1.5 text-sm text-ink-muted">
-            {todayTasks.length} due today
-            {overdue.length > 0 ? ` · ${overdue.length} overdue` : ""}
-            {" · "}
-            <Link href="/lists" className="text-accent-strong/90 hover:text-accent-strong">
-              Lists
-            </Link>
-          </p>
-        </div>
-        <Link
-          href="/capture"
-          className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-surface"
-        >
-          + Add
-        </Link>
+      <div className="pt-0.5">
+        <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-accent">
+          {settings.coupleLabel}
+        </p>
+        <p className="mt-1 font-display text-2xl sm:text-[2rem] tracking-tight text-ink">
+          Hey, {myName}
+        </p>
+        <p className="mt-1.5 text-sm text-ink-muted">
+          {todayTasks.length} due today
+          {overdue.length > 0 ? ` · ${overdue.length} overdue` : ""}
+          {" · "}
+          <Link href="/lists" className="text-accent-strong/90 hover:text-accent-strong">
+            Lists
+          </Link>
+        </p>
       </div>
 
       <AiDigestCard
