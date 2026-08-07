@@ -1,27 +1,34 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 
 /**
- * Create / join / pick funnel. AppShell shows WorkspaceEntry until
- * the user is in a space; then we send them into the app.
+ * Create / join funnel. AppShell shows WorkspaceEntry until the user
+ * has a membership; once they do, send them to Home.
  */
 function EnterInner() {
-  const router = useRouter();
-
   return (
     <AppShell showFilter={false}>
-      {() => {
-        router.replace("/capture");
-        return (
-          <p className="text-sm text-ink-muted text-center py-12">
-            Opening your space…
-          </p>
-        );
-      }}
+      {({ workspaceId, me }) => (
+        <EnterRedirect ready={!!workspaceId && !!me} />
+      )}
     </AppShell>
+  );
+}
+
+function EnterRedirect({ ready }: { ready: boolean }) {
+  const router = useRouter();
+
+  useEffect(() => {
+    if (ready) router.replace("/home");
+  }, [ready, router]);
+
+  return (
+    <p className="text-sm text-ink-muted text-center py-12">
+      Opening your space…
+    </p>
   );
 }
 

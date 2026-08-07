@@ -23,9 +23,7 @@ interface Props {
 }
 
 export function WorkspaceEntry({
-  settings,
   workspace,
-  meName,
   needsMigration,
   initialCode,
   onCreate,
@@ -58,18 +56,14 @@ export function WorkspaceEntry({
     if (stepFromUrl === "create" || stepFromUrl === "join") return stepFromUrl;
     return "landing";
   });
-  const [name, setName] = useState("Tandem");
-  const [myName, setMyName] = useState(meName || settings.partnerAName);
-  const [partnerName, setPartnerName] = useState(settings.partnerBName);
+  const [name, setName] = useState("");
+  const [myName, setMyName] = useState("");
+  const [partnerName, setPartnerName] = useState("");
   const [joinCode, setJoinCode] = useState(codeFromUrl);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<Workspace | null>(null);
   const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    if (meName) setMyName(meName);
-  }, [meName]);
 
   useEffect(() => {
     if (workspace && step === "landing") {
@@ -183,7 +177,8 @@ export function WorkspaceEntry({
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-line bg-surface-elevated px-3 py-2.5 text-sm outline-none focus:border-accent"
+                placeholder="e.g. Ours"
+                className="mt-1 w-full rounded-xl border border-line bg-surface-elevated px-3 py-2.5 text-sm outline-none focus:border-accent placeholder:text-ink-dim/50"
               />
             </label>
             <div className="grid grid-cols-2 gap-3">
@@ -195,7 +190,8 @@ export function WorkspaceEntry({
                   required
                   value={myName}
                   onChange={(e) => setMyName(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-line bg-surface-elevated px-3 py-2.5 text-sm outline-none focus:border-accent"
+                  placeholder="Your name"
+                  className="mt-1 w-full rounded-xl border border-line bg-surface-elevated px-3 py-2.5 text-sm outline-none focus:border-accent placeholder:text-ink-dim/50"
                 />
               </label>
               <label className="block">
@@ -206,7 +202,8 @@ export function WorkspaceEntry({
                   required
                   value={partnerName}
                   onChange={(e) => setPartnerName(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-line bg-surface-elevated px-3 py-2.5 text-sm outline-none focus:border-accent"
+                  placeholder="Their name"
+                  className="mt-1 w-full rounded-xl border border-line bg-surface-elevated px-3 py-2.5 text-sm outline-none focus:border-accent placeholder:text-ink-dim/50"
                 />
               </label>
             </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { UserButton } from "@clerk/nextjs";
+import { UserButton, useUser } from "@clerk/nextjs";
 import type { CoupleSettings, PartnerId } from "@/lib/types";
 import { partnerName } from "@/lib/types";
 import Link from "next/link";
@@ -45,9 +45,15 @@ export function Nav({
   me,
 }: Props) {
   const pathname = usePathname();
+  const { user } = useUser();
   const [moreOpen, setMoreOpen] = useState(false);
   const onCapture = pathname.startsWith("/capture");
-  const myName = partnerName(me, settings);
+  const seatName = partnerName(me, settings);
+  const displayName =
+    user?.firstName ||
+    user?.username ||
+    (seatName !== "Partner A" && seatName !== "Partner B" ? seatName : null) ||
+    "Account";
 
   useEffect(() => {
     setMoreOpen(false);
@@ -93,44 +99,65 @@ export function Nav({
             })}
           </nav>
 
-          {/* Actions: search · identity · account · add */}
-          <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-2.5">
+          <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
             {onSearch && (
               <button
                 type="button"
                 onClick={onSearch}
-                className="inline-flex h-9 items-center gap-1.5 rounded-full border border-line/70 bg-surface-elevated/40 px-2.5 text-ink-muted transition-colors hover:border-line hover:text-ink sm:px-3"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-white/[0.06] hover:text-ink"
                 title="Search (⌘K)"
                 aria-label="Search"
               >
                 <SearchIcon />
-                <span className="hidden text-xs sm:inline">Search</span>
-                <kbd className="hidden rounded border border-line/60 px-1 py-px text-[10px] text-ink-dim lg:inline">
-                  ⌘K
-                </kbd>
               </button>
             )}
 
-            <div className="hidden h-5 w-px bg-line/70 sm:block" aria-hidden />
+            <button
+              type="button"
+              onClick={onSettings}
+              className="hidden h-9 w-9 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-white/[0.06] hover:text-ink sm:inline-flex"
+              title="Space settings"
+              aria-label="Space settings"
+            >
+              <GearIcon />
+            </button>
 
-            <div className="flex items-center gap-2 rounded-full border border-line/70 bg-surface-elevated/50 py-1 pl-2.5 pr-1">
-              <div className="min-w-0 hidden sm:block">
-                <p className="truncate text-[11px] leading-none text-ink-dim">
-                  You
-                </p>
-                <p className="mt-0.5 max-w-[7rem] truncate text-xs font-medium leading-none text-ink">
-                  {myName}
-                </p>
-              </div>
+            {!onCapture && (
+              <Link
+                href="/capture"
+                className="inline-flex h-9 items-center rounded-full bg-ink px-3.5 text-sm font-medium text-surface transition-colors hover:bg-white"
+              >
+                <span className="sm:hidden">+</span>
+                <span className="hidden sm:inline">+ Add</span>
+              </Link>
+            )}
+
+            <div className="ml-0.5 flex items-center gap-2 pl-1">
+              <span className="hidden max-w-[6.5rem] truncate text-sm text-ink-muted sm:inline">
+                {displayName}
+              </span>
               <UserButton
                 afterSignOutUrl="/"
                 appearance={{
+                  variables: {
+                    colorPrimary: "#8fa8b8",
+                    colorText: "#f5f5f5",
+                    colorBackground: "#111111",
+                    colorInputBackground: "#050505",
+                    colorInputText: "#f5f5f5",
+                    borderRadius: "0.75rem",
+                  },
                   elements: {
-                    avatarBox: "h-8 w-8 ring-1 ring-line",
+                    avatarBox:
+                      "h-8 w-8 rounded-full ring-1 ring-accent/40 shadow-[0_0_0_3px_rgba(143,168,184,0.08)]",
+                    userButtonTrigger:
+                      "rounded-full focus:shadow-none focus:ring-2 focus:ring-accent/40",
                     userButtonPopoverCard:
                       "border border-line bg-surface-elevated shadow-xl",
+                    userButtonPopoverMain: "bg-surface-elevated",
                     userButtonPopoverActionButton: "hover:bg-surface-hover",
                     userButtonPopoverActionButtonText: "text-ink",
+                    userButtonPopoverActionButtonIcon: "text-ink-muted",
                     userButtonPopoverFooter: "hidden",
                   },
                 }}
@@ -151,16 +178,6 @@ export function Nav({
                 </UserButton.MenuItems>
               </UserButton>
             </div>
-
-            {!onCapture && (
-              <Link
-                href="/capture"
-                className="inline-flex h-9 items-center rounded-full bg-ink px-3.5 text-sm font-medium text-surface transition-colors hover:bg-white"
-              >
-                <span className="sm:hidden">+</span>
-                <span className="hidden sm:inline">+ Add</span>
-              </Link>
-            )}
           </div>
         </div>
       </header>
@@ -213,12 +230,23 @@ export function Nav({
           />
           <div className="relative z-10 w-full rounded-t-2xl border border-line bg-surface-elevated px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-xl">
             <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-line" />
-            <div className="mb-3 flex items-center justify-between rounded-xl border border-line/70 bg-surface px-3 py-2.5">
-              <div>
-                <p className="text-[11px] text-ink-dim">Signed in as</p>
-                <p className="text-sm text-ink">{myName}</p>
+            <div className="mb-3 flex items-center justify-between rounded-xl border border-line/60 bg-surface/80 px-3.5 py-3">
+              <div className="min-w-0">
+                <p className="text-[11px] uppercase tracking-[0.12em] text-ink-dim">
+                  Account
+                </p>
+                <p className="mt-1 truncate text-sm text-ink">{displayName}</p>
               </div>
-              <UserButton afterSignOutUrl="/" />
+              <UserButton
+                afterSignOutUrl="/"
+                appearance={{
+                  variables: { colorPrimary: "#8fa8b8" },
+                  elements: {
+                    avatarBox: "h-9 w-9 ring-1 ring-accent/40",
+                    userButtonPopoverFooter: "hidden",
+                  },
+                }}
+              />
             </div>
             <p className="mb-2 text-xs uppercase tracking-wide text-ink-dim">
               More
