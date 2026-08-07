@@ -11,12 +11,12 @@ const config: Config = {
       colors: {
         surface: {
           DEFAULT: "#050505",
-          elevated: "#0c0c0c",
-          hover: "#141414",
+          elevated: "#111111",
+          hover: "#1a1a1a",
         },
         line: {
-          DEFAULT: "#222222",
-          subtle: "#181818",
+          DEFAULT: "#2a2a2a",
+          subtle: "#1c1c1c",
         },
         ink: {
           DEFAULT: "#f5f5f5",
@@ -42,6 +42,7 @@ const config: Config = {
       fontFamily: {
         sans: ["var(--font-geist-sans)", "ui-sans-serif", "system-ui"],
         mono: ["var(--font-geist-mono)", "ui-monospace", "monospace"],
+        display: ["var(--font-display)", "var(--font-geist-sans)", "serif"],
       },
       borderRadius: {
         task: "10px",

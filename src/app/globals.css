@@ -4,14 +4,14 @@
 
 :root {
   --bg: #050505;
-  --bg-elevated: #0c0c0c;
-  --bg-hover: #141414;
-  --border: #222222;
-  --border-subtle: #181818;
+  --bg-elevated: #111111;
+  --bg-hover: #1a1a1a;
+  --border: #2a2a2a;
+  --border-subtle: #1c1c1c;
   --text: #f5f5f5;
   --text-muted: #9a9a9a;
   --text-dim: #6b6b6b;
-  /* Soft mist blue — third color with black + white */
+  /* Soft mist blue: third color with black + white */
   --accent: #8fa8b8;
   --accent-dim: rgba(143, 168, 184, 0.14);
   --accent-strong: #a8c0ce;
@@ -29,9 +29,13 @@ html {
 
 body {
   color: var(--text);
-  background:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(143, 168, 184, 0.08), transparent),
-    var(--bg);
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse 90% 55% at 50% -25%, rgba(143, 168, 184, 0.14), transparent 55%),
+    radial-gradient(ellipse 45% 35% at 100% 90%, rgba(143, 168, 184, 0.05), transparent 50%),
+    radial-gradient(ellipse 40% 30% at 0% 80%, rgba(255, 255, 255, 0.02), transparent 45%),
+    linear-gradient(180deg, #0a0a0a 0%, #050505 45%, #030303 100%);
+  background-attachment: fixed;
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   font-size: 14px;
   line-height: 1.45;
@@ -43,6 +47,57 @@ body {
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(4%, 6%) scale(1.06);
+  }
+}
+
+@keyframes drift-slow {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-5%, -4%) scale(1.08);
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-drift {
+  animation: drift 14s ease-in-out infinite;
+}
+
+.animate-drift-slow {
+  animation: drift-slow 18s ease-in-out infinite;
+}
+
+.animate-sheet-in {
+  animation: sheet-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-drift,
+  .animate-drift-slow,
+  .animate-sheet-in {
+    animation: none !important;
   }
 }
 

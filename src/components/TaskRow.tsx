@@ -1,38 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   assigneeLabel,
-  categoryLabel,
+  formatShortDate,
+  todayKey,
   type Assignee,
   type CoupleSettings,
+  type PartnerId,
   type Task,
-  type WeekNumber,
 } from "@/lib/types";
-import { WEEKS, formatShortDate, isWeekPast } from "@/lib/weeks";
+import { SNOOZE_OPTIONS, snoozeDate, type SnoozePreset } from "@/lib/snooze";
 
 const STATUS_META: Record<
   Task["status"],
-  { label: string; className: string; box: string }
+  { label: string; box: string }
 > = {
   todo: {
     label: "Todo",
-    className: "text-ink",
-    box: "border-ink-dim bg-transparent",
+    box: "border-ink-dim/70 bg-transparent",
   },
   in_progress: {
     label: "In progress",
-    className: "text-ink",
-    box: "border-accent bg-accent/15",
+    box: "border-accent bg-accent/20",
   },
   blocked: {
     label: "Blocked",
-    className: "text-ink-muted",
     box: "border-ink-muted bg-ink/10",
   },
   done: {
     label: "Done",
-    className: "text-ink-dim line-through decoration-ink-dim",
     box: "border-ink bg-ink",
   },
 };
@@ -40,118 +37,86 @@ const STATUS_META: Record<
 interface Props {
   task: Task;
   settings: CoupleSettings;
+  me: PartnerId;
   onCycleStatus: (task: Task) => Promise<unknown>;
   onSetBlocked: (task: Task, reason: string) => Promise<unknown>;
-  onAssignWeek?: (id: string, week: WeekNumber | null) => Promise<unknown>;
   onSetAssignee?: (id: string, assignee: Assignee) => Promise<unknown>;
-  onPushNext?: (task: Task) => Promise<unknown>;
-  showWeek?: boolean;
+  onSetDueDate?: (id: string, dueDate: string | null) => Promise<unknown>;
+  onSetPinned?: (id: string, pinned: boolean) => Promise<unknown>;
+  onEdit?: (task: Task) => void;
+  onPingPartner?: (task: Task) => Promise<unknown>;
   dense?: boolean;
 }
 
 export function TaskRow({
   task,
   settings,
+  me,
   onCycleStatus,
   onSetBlocked,
-  onAssignWeek,
   onSetAssignee,
-  onPushNext,
-  showWeek = false,
-  dense = true,
+  onSetDueDate,
+  onSetPinned,
+  onEdit,
+  onPingPartner,
 }: Props) {
+  const [menuOpen, setMenuOpen] = useState(false);
   const [blocking, setBlocking] = useState(false);
   const [blockReason, setBlockReason] = useState(task.notes ?? "");
+  const [snoozing, setSnoozing] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const meta = STATUS_META[task.status];
+  const today = todayKey();
   const overdue =
-    task.priority === "critical" &&
-    task.status !== "done" &&
-    task.weekAssigned != null &&
-    isWeekPast(task.weekAssigned);
+    task.status !== "done" && !!task.dueDate && task.dueDate < today;
 
-  const controls = (
-    <>
-      {onSetAssignee && (
-        <select
-          value={task.assignee}
-          onChange={(e) => onSetAssignee(task.id, e.target.value as Assignee)}
-          className="min-w-0 flex-1 sm:flex-none sm:max-w-[6.5rem] rounded border border-accent bg-accent px-1.5 py-1.5 sm:py-0.5 text-[11px] font-medium text-black outline-none [color-scheme:light]"
-          title="Who owns this"
-        >
-          <option value="a">{settings.partnerAName}</option>
-          <option value="b">{settings.partnerBName}</option>
-          <option value="both">Shared</option>
-        </select>
-      )}
-      {task.status !== "blocked" && task.status !== "done" && (
-        <button
-          type="button"
-          onClick={() => {
-            setBlockReason(task.notes ?? "");
-            setBlocking(true);
-          }}
-          className="rounded px-2 py-1.5 sm:py-0.5 text-[11px] text-ink-dim hover:bg-surface-hover hover:text-ink"
-        >
-          Block
-        </button>
-      )}
-      {onAssignWeek && (
-        <select
-          value={task.weekAssigned ?? ""}
-          onChange={(e) =>
-            onAssignWeek(
-              task.id,
-              e.target.value === ""
-                ? null
-                : (Number(e.target.value) as WeekNumber)
-            )
-          }
-          className="min-w-0 flex-1 sm:flex-none sm:max-w-[7.5rem] rounded border border-accent bg-accent px-1.5 py-1.5 sm:py-0.5 text-[11px] font-medium text-black outline-none [color-scheme:light]"
-          title="Assign week"
-        >
-          <option value="">Backlog</option>
-          {WEEKS.map((w) => (
-            <option key={w.week} value={w.week}>
-              W{w.week}
-            </option>
-          ))}
-        </select>
-      )}
-      {onPushNext &&
-        task.weekAssigned != null &&
-        task.weekAssigned < 5 &&
-        task.status !== "done" && (
-          <button
-            type="button"
-            onClick={() => onPushNext(task)}
-            className="rounded px-2 py-1.5 sm:py-0.5 text-[11px] text-ink-dim hover:bg-surface-hover hover:text-ink"
-            title="Push to next week"
-          >
-            → W{task.weekAssigned + 1}
-          </button>
-        )}
-    </>
-  );
+  useEffect(() => {
+    if (!menuOpen) return;
+    function onDoc(e: MouseEvent) {
+      if (!menuRef.current?.contains(e.target as Node)) setMenuOpen(false);
+    }
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [menuOpen]);
+
+  function applySnooze(preset: SnoozePreset) {
+    if (!onSetDueDate) return;
+    void onSetDueDate(task.id, snoozeDate(preset, task.dueDate));
+    setSnoozing(false);
+    setMenuOpen(false);
+  }
+
+  const metaBits = [
+    assigneeLabel(task.assignee, settings, me),
+    task.dueDate
+      ? overdue
+        ? `Overdue ${formatShortDate(task.dueDate)}`
+        : formatShortDate(task.dueDate)
+      : null,
+    task.status === "in_progress" ? "In progress" : null,
+    task.status === "blocked" ? "Blocked" : null,
+    task.pinned ? "Pinned" : null,
+  ].filter(Boolean);
 
   return (
     <div
-      className={`group bg-transparent border-l-[3px] ${
-        overdue
+      className={`group relative border-l-2 transition-colors ${
+        overdue || task.priority === "critical"
           ? "border-l-accent"
-          : task.priority === "critical"
-            ? "border-l-accent"
-            : "border-l-transparent"
-      } ${dense ? "py-2.5 px-3.5 sm:py-2.5" : "py-3 px-3.5"} hover:bg-white/[0.03] transition-colors`}
+          : "border-l-transparent"
+      } ${
+        task.status === "done" ? "opacity-55" : ""
+      } hover:bg-white/[0.035]`}
     >
-      <div className="flex items-start gap-2.5 sm:gap-2">
+      <div className="flex items-center gap-3 px-3.5 py-3">
         <button
           type="button"
-          title={`Status: ${meta.label} — tap to cycle`}
-          onClick={() => onCycleStatus(task)}
-          className={`mt-0.5 h-6 w-6 sm:h-4 sm:w-4 shrink-0 rounded-sm border ${meta.box} flex items-center justify-center`}
+          title={`${meta.label}: tap to advance`}
+          onClick={() => void onCycleStatus(task)}
+          className={`h-5 w-5 shrink-0 rounded-[5px] border ${meta.box} flex items-center justify-center transition-colors`}
         >
           {task.status === "done" && (
-            <svg viewBox="0 0 12 12" className="h-3.5 w-3.5 sm:h-3 sm:w-3 text-black" aria-hidden>
+            <svg viewBox="0 0 12 12" className="h-3 w-3 text-black" aria-hidden>
               <path
                 d="M2.5 6.5L5 9l4.5-5.5"
                 fill="none"
@@ -168,71 +133,196 @@ export function TaskRow({
           )}
         </button>
 
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-            <span className={`text-[13px] sm:text-sm break-words ${meta.className}`}>
-              {task.title}
-            </span>
-            {task.priority === "critical" && (
-              <span className="rounded px-1 py-px text-[10px] font-semibold uppercase tracking-wider text-accent bg-accent/10">
-                IMP
-              </span>
-            )}
-            {overdue && (
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-accent">
-                Overdue
-              </span>
-            )}
-          </div>
+        <button
+          type="button"
+          onClick={() => onEdit?.(task)}
+          className="min-w-0 flex-1 text-left"
+        >
+          <span
+            className={`block text-[13px] sm:text-sm leading-snug ${
+              task.status === "done"
+                ? "text-ink-dim line-through decoration-ink-dim/70"
+                : "text-ink"
+            }`}
+          >
+            {task.title}
+          </span>
+          <span
+            className={`mt-0.5 block text-[11px] ${
+              overdue ? "text-accent-strong" : "text-ink-dim"
+            }`}
+          >
+            {metaBits.join(" · ")}
+          </span>
+        </button>
 
-          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-ink-dim">
-            <span>{assigneeLabel(task.assignee, settings)}</span>
-            <span>·</span>
-            <span>{categoryLabel(task.category)}</span>
-            <span>·</span>
-            <span>{meta.label}</span>
-            {showWeek && (
-              <>
-                <span>·</span>
-                <span>
-                  {task.weekAssigned
-                    ? `Week ${task.weekAssigned}`
-                    : "Unscheduled"}
-                </span>
-              </>
-            )}
-            {task.status === "done" && task.completedAt && (
-              <>
-                <span>·</span>
-                <span>Done {formatShortDate(task.completedAt)}</span>
-              </>
-            )}
-            {task.status === "blocked" && task.notes && (
-              <>
-                <span>·</span>
-                <span className="text-ink-muted">Blocked: {task.notes}</span>
-              </>
-            )}
-          </div>
+        {task.status === "blocked" && onPingPartner && (
+          <button
+            type="button"
+            onClick={() => void onPingPartner(task)}
+            className="shrink-0 rounded-full border border-accent/40 bg-accent/10 px-2.5 py-1 text-[11px] text-accent-strong"
+          >
+            Help
+          </button>
+        )}
 
-          <div className="mt-2 flex flex-wrap items-center gap-1.5 sm:hidden">
-            {controls}
-          </div>
-        </div>
+        <div className="relative shrink-0" ref={menuRef}>
+          <button
+            type="button"
+            onClick={() => setMenuOpen((v) => !v)}
+            className={`flex h-8 w-8 items-center justify-center rounded-full text-ink-dim transition-colors hover:bg-surface-hover hover:text-ink ${
+              menuOpen ? "bg-surface-hover text-ink" : "sm:opacity-0 sm:group-hover:opacity-100"
+            }`}
+            aria-label="Task actions"
+          >
+            <span className="text-base leading-none tracking-widest">···</span>
+          </button>
 
-        <div className="hidden sm:flex shrink-0 items-center gap-1 opacity-80 group-hover:opacity-100">
-          {controls}
+          {menuOpen && (
+            <div className="absolute right-0 top-full z-30 mt-1 w-44 overflow-hidden rounded-xl border border-line bg-surface-elevated py-1 shadow-xl">
+              {onEdit && (
+                <MenuItem
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onEdit(task);
+                  }}
+                >
+                  Edit
+                </MenuItem>
+              )}
+              {onSetAssignee && (
+                <div className="px-2 py-1.5">
+                  <p className="mb-1 px-1 text-[10px] uppercase tracking-wide text-ink-dim">
+                    Who
+                  </p>
+                  <div className="flex gap-0.5">
+                    {(
+                      [
+                        { v: "a" as const, l: settings.partnerAName.slice(0, 1) },
+                        { v: "b" as const, l: settings.partnerBName.slice(0, 1) },
+                        { v: "both" as const, l: "T" },
+                      ] as const
+                    ).map((opt) => (
+                      <button
+                        key={opt.v}
+                        type="button"
+                        title={
+                          opt.v === "both"
+                            ? "Together"
+                            : opt.v === "a"
+                              ? settings.partnerAName
+                              : settings.partnerBName
+                        }
+                        onClick={() => {
+                          void onSetAssignee(task.id, opt.v);
+                          setMenuOpen(false);
+                        }}
+                        className={`flex-1 rounded-md py-1.5 text-[11px] font-medium ${
+                          task.assignee === opt.v
+                            ? "bg-accent text-surface"
+                            : "bg-surface text-ink-muted hover:text-ink"
+                        }`}
+                      >
+                        {opt.l}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {onSetDueDate && (
+                <div className="border-t border-line px-2 py-1.5">
+                  <label className="block">
+                    <span className="mb-1 block px-1 text-[10px] uppercase tracking-wide text-ink-dim">
+                      Due
+                    </span>
+                    <input
+                      type="date"
+                      value={task.dueDate ?? ""}
+                      onChange={(e) => {
+                        void onSetDueDate(task.id, e.target.value || null);
+                        setMenuOpen(false);
+                      }}
+                      className="w-full rounded-md border border-line bg-surface px-2 py-1.5 text-[11px] text-ink outline-none focus:border-accent [color-scheme:dark]"
+                    />
+                  </label>
+                </div>
+              )}
+              {onSetDueDate && task.status !== "done" && (
+                <MenuItem
+                  onClick={() => {
+                    setSnoozing(true);
+                    setMenuOpen(false);
+                  }}
+                >
+                  Snooze…
+                </MenuItem>
+              )}
+              {onSetPinned && (
+                <MenuItem
+                  onClick={() => {
+                    void onSetPinned(task.id, !task.pinned);
+                    setMenuOpen(false);
+                  }}
+                >
+                  {task.pinned ? "Unpin" : "Pin to Home"}
+                </MenuItem>
+              )}
+              {task.status !== "blocked" && task.status !== "done" && (
+                <MenuItem
+                  onClick={() => {
+                    setBlockReason(task.notes ?? "");
+                    setBlocking(true);
+                    setMenuOpen(false);
+                  }}
+                >
+                  Mark blocked
+                </MenuItem>
+              )}
+              {task.status === "blocked" && onPingPartner && (
+                <MenuItem
+                  onClick={() => {
+                    void onPingPartner(task);
+                    setMenuOpen(false);
+                  }}
+                >
+                  Ask partner
+                </MenuItem>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
+      {snoozing && onSetDueDate && (
+        <div className="flex flex-wrap gap-1.5 border-t border-line/60 bg-white/[0.02] px-3.5 py-2.5 pl-11">
+          {SNOOZE_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => applySnooze(opt.value)}
+              className="rounded-full border border-line px-2.5 py-1 text-[11px] text-ink-muted hover:border-accent/40 hover:text-ink"
+            >
+              {opt.label}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => setSnoozing(false)}
+            className="rounded-full px-2.5 py-1 text-[11px] text-ink-dim"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+
       {blocking && (
-        <div className="mt-2 ml-8 sm:ml-6 flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-col gap-2 border-t border-line/60 bg-white/[0.02] px-3.5 py-2.5 pl-11 sm:flex-row sm:items-center">
           <input
             autoFocus
             value={blockReason}
             onChange={(e) => setBlockReason(e.target.value)}
             placeholder="What's blocking this?"
-            className="flex-1 rounded border border-line bg-surface-elevated px-2 py-2 sm:py-1 text-xs text-ink outline-none focus:border-accent"
+            className="flex-1 rounded-lg border border-line bg-surface px-2.5 py-2 text-xs text-ink outline-none focus:border-accent"
           />
           <div className="flex gap-2">
             <button
@@ -241,14 +331,14 @@ export function TaskRow({
                 await onSetBlocked(task, blockReason.trim() || "Blocked");
                 setBlocking(false);
               }}
-              className="rounded bg-accent px-3 py-2 sm:py-1 text-xs font-medium text-black"
+              className="rounded-full bg-accent px-3 py-1.5 text-xs font-medium text-surface"
             >
               Save
             </button>
             <button
               type="button"
               onClick={() => setBlocking(false)}
-              className="rounded px-3 py-2 sm:py-1 text-xs text-ink-muted"
+              className="rounded-full px-3 py-1.5 text-xs text-ink-muted"
             >
               Cancel
             </button>
@@ -256,5 +346,23 @@ export function TaskRow({
         </div>
       )}
     </div>
+  );
+}
+
+function MenuItem({
+  children,
+  onClick,
+}: {
+  children: ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full px-3 py-2 text-left text-xs text-ink-muted hover:bg-surface-hover hover:text-ink"
+    >
+      {children}
+    </button>
   );
 }

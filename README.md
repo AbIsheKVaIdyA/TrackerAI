@@ -1,32 +1,44 @@
-# August Execution Tracker
+# Tandem
 
-Couple execution tracker for clearing tasks together before **Sep 1, 2026**. Both partners are full admins — add, edit, reassign, and monitor in realtime.
+Couples co-execution tracker: shared tasks, calendar, lists, and a weekly rhythm.
+
+Each partner signs in with their own account (Clerk), then creates or joins one shared space with a Supabase invite code. Both seats edit the same board.
 
 ## Stack
 
-- Next.js 14 (App Router) + TypeScript
-- Tailwind CSS
-- Supabase (Postgres) via `@supabase/supabase-js` — shared table, no login accounts
+- **Next.js 14** (App Router) + TypeScript + Tailwind
+- **Clerk** for authentication
+- **Supabase** for Postgres + Realtime
+- **Groq** for optional AI helpers (propose only; you confirm)
 
 ## Setup
 
-### 1. Supabase schema
+### 1. Supabase
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. SQL Editor → run [`supabase/schema.sql`](./supabase/schema.sql) (fresh install), **or** if you already had the old single-user table, run [`supabase/migrate-couple.sql`](./supabase/migrate-couple.sql).
+2. In the SQL Editor, run in order:
+   - `supabase/schema.sql`
+   - `supabase/migrate-workspaces.sql`
+   - `supabase/migrate-slice2.sql` through `migrate-slice6.sql`
+   - `supabase/migrate-auth.sql`
 
-**RLS:** Both scripts include a permissive `"allow all for anon"` policy. Without it, the app fails silently.
+### 2. Environment
 
-### 2. Env
-
-Copy `.env.local.example` → `.env.local`:
-
+```bash
+cp .env.example .env.local
 ```
-NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+
+Fill in:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+CLERK_SECRET_KEY=
+GROQ_API_KEY=
 ```
 
-Restart `npm run dev` after changing env. Share the same project URL + anon key with your partner.
+Restart the dev server after changing env.
 
 ### 3. Run
 
@@ -35,25 +47,24 @@ npm install
 npm run dev
 ```
 
-On first open, each person picks who they are on that device.
+Open the app → **Sign up** → **Create a space** (or **Join with a code**).
 
-## Couple features
+## Product
 
-- **Both admins** — either person can add, edit status, reassign, push weeks
-- **Assigned to** — you / partner / both (shared)
-- **Filters** — All · Mine · each person · Shared
-- **Dual progress** on the dashboard
-- **Live sync** — green “Live” dot means realtime updates across devices
-- **Settings** — set both names (synced in Supabase)
+| Area | What it does |
+|------|----------------|
+| **Auth** | Clerk accounts; sticky partner seats (a / b) |
+| **Spaces** | Invite code joins one couple board |
+| **Add** | Natural-language capture + optional Ask AI |
+| **Home** | Today, digests, Mine / Yours / Together, pings |
+| **Tasks** | Board with snooze, pin, block, comments, undo |
+| **Calendar** | Shared plans and recurring events |
+| **Lists** | Shared checklists (e.g. groceries) |
+| **Review** | Weekly co-pilot with soft focus suggestions |
+| **AI** | Capture, digest, fairness tip, unblock coach. Always confirm before save. |
 
-## Weeks
+## Notes
 
-| Week | Dates |
-|------|--------|
-| 1 | Jul 28 – Aug 3 |
-| 2 | Aug 4 – Aug 10 |
-| 3 | Aug 11 – Aug 17 |
-| 4 | Aug 18 – Aug 24 |
-| 5 | Aug 25 – Aug 31 |
-
-Deadline: **Sep 1, 2026**.
+- AI never edits without confirmation.
+- New spaces start empty (no demo seed data).
+- Keep `CLERK_SECRET_KEY`, `GROQ_API_KEY`, and service-role keys server-only (never `NEXT_PUBLIC_`).

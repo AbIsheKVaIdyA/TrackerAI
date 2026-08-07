@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import { ClerkProvider } from "@clerk/nextjs";
+import { Fraunces } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 
@@ -12,11 +14,32 @@ const geistMono = localFont({
   variable: "--font-geist-mono",
   weight: "100 900",
 });
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-display",
+  weight: ["400", "600"],
+});
 
 export const metadata: Metadata = {
-  title: "August Execution Tracker",
+  title: "Tandem: Run life together",
   description:
-    "Shared execution tracker — clear the list before Sep 1, 2026.",
+    "One shared space for couples: tasks, plans, lists, and a weekly rhythm. Both of you in sync.",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Tandem",
+  },
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg",
+  },
+  openGraph: {
+    title: "Tandem: Run life together",
+    description:
+      "One shared space for couples: tasks, plans, lists, and a weekly rhythm.",
+    type: "website",
+  },
 };
 
 export const viewport: Viewport = {
@@ -34,9 +57,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased overflow-x-hidden`}
+        className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} font-sans antialiased overflow-x-hidden`}
       >
-        {children}
+        <ClerkProvider>
+          {children}
+        </ClerkProvider>
       </body>
     </html>
   );

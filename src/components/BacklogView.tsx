@@ -1,52 +1,65 @@
 "use client";
 
-import type { Assignee, CoupleSettings, Task, WeekNumber } from "@/lib/types";
+import type { Assignee, CoupleSettings, PartnerId, Task } from "@/lib/types";
 import { TaskRow } from "./TaskRow";
 
 interface Props {
   tasks: Task[];
   settings: CoupleSettings;
+  me: PartnerId;
   onCycleStatus: (task: Task) => Promise<unknown>;
   onSetBlocked: (task: Task, reason: string) => Promise<unknown>;
-  onAssignWeek: (id: string, week: WeekNumber | null) => Promise<unknown>;
   onSetAssignee: (id: string, assignee: Assignee) => Promise<unknown>;
+  onSetDueDate: (id: string, dueDate: string | null) => Promise<unknown>;
+  onEdit: (task: Task) => void;
+  onPingPartner?: (task: Task) => Promise<unknown>;
+  onSetPinned?: (id: string, pinned: boolean) => Promise<unknown>;
 }
 
 export function BacklogView({
   tasks,
   settings,
+  me,
   onCycleStatus,
   onSetBlocked,
-  onAssignWeek,
   onSetAssignee,
+  onSetDueDate,
+  onEdit,
+  onPingPartner,
+  onSetPinned,
 }: Props) {
-  const backlog = tasks.filter((t) => t.weekAssigned == null);
+  const backlog = tasks.filter((t) => !t.dueDate && t.status !== "done");
 
   return (
     <div>
-      <div className="mb-4">
-        <h1 className="text-lg font-semibold tracking-tight">Backlog</h1>
-        <p className="text-sm text-ink-muted">
-          Unscheduled tasks — assign a week or reassign ownership.
+      <div className="mb-5">
+        <h1 className="font-display text-2xl tracking-tight text-ink">
+          Backlog
+        </h1>
+        <p className="mt-1 text-sm text-ink-muted">
+          No due date yet · {backlog.length} parked
         </p>
       </div>
 
       {backlog.length === 0 ? (
-        <p className="border border-dashed border-line px-3 py-8 text-center text-sm text-ink-dim">
-          Backlog is empty. New tasks without a week land here.
+        <p className="rounded-xl border border-dashed border-line px-3 py-10 text-center text-sm text-ink-dim">
+          Backlog is empty.
         </p>
       ) : (
-        <div className="divide-y divide-line overflow-hidden rounded-task border border-line/80">
+        <div className="overflow-hidden rounded-xl border border-line/90 bg-surface-elevated/80 divide-y divide-line/70">
           {backlog.map((task) => (
             <TaskRow
               key={task.id}
               task={task}
               settings={settings}
+              me={me}
               onCycleStatus={onCycleStatus}
               onSetBlocked={onSetBlocked}
-              onAssignWeek={onAssignWeek}
               onSetAssignee={onSetAssignee}
-              showWeek
+              onSetDueDate={onSetDueDate}
+              onEdit={onEdit}
+              onPingPartner={onPingPartner}
+              onSetPinned={onSetPinned}
             />
           ))}
         </div>

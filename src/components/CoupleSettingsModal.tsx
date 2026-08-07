@@ -1,21 +1,37 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import type { CoupleSettings } from "@/lib/types";
+import Link from "next/link";
+import type { CoupleSettings, Workspace } from "@/lib/types";
 
 interface Props {
   open: boolean;
   settings: CoupleSettings;
+  workspace: Workspace | null;
   onClose: () => void;
   onSave: (next: CoupleSettings) => Promise<void>;
+  onToggleFairness?: (show: boolean) => Promise<void>;
+  onLeave: () => void;
+  onDelete: () => Promise<void>;
 }
 
-export function CoupleSettingsModal({ open, settings, onClose, onSave }: Props) {
+export function CoupleSettingsModal({
+  open,
+  settings,
+  workspace,
+  onClose,
+  onSave,
+  onToggleFairness,
+  onLeave,
+  onDelete,
+}: Props) {
   const [partnerAName, setPartnerAName] = useState(settings.partnerAName);
   const [partnerBName, setPartnerBName] = useState(settings.partnerBName);
   const [coupleLabel, setCoupleLabel] = useState(settings.coupleLabel);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -27,6 +43,11 @@ export function CoupleSettingsModal({ open, settings, onClose, onSave }: Props) 
   }, [open, settings]);
 
   if (!open) return null;
+
+  const inviteLink =
+    typeof window !== "undefined" && workspace
+      ? `${window.location.origin}/enter?code=${workspace.inviteCode}`
+      : "";
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -42,53 +63,131 @@ export function CoupleSettingsModal({ open, settings, onClose, onSave }: Props) 
     }
   }
 
+  async function handleDelete() {
+    if (
+      !confirm(
+        "Delete this couple space and all its tasks/events? This cannot be undone."
+      )
+    ) {
+      return;
+    }
+    if (!confirm("Really delete everything in this space?")) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      await onDelete();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Delete failed");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-start justify-center bg-black/70 sm:p-4 sm:pt-[12vh]">
       <button type="button" aria-label="Close" className="absolute inset-0" onClick={onClose} />
       <form
         onSubmit={handleSubmit}
-        className="relative z-10 w-full max-w-md border border-line bg-surface-elevated p-5 rounded-t-xl sm:rounded-none pb-[max(1.25rem,env(safe-area-inset-bottom))]"
+        className="relative z-10 w-full max-w-md border border-line bg-surface-elevated p-5 rounded-t-xl sm:rounded-none pb-[max(1.25rem,env(safe-area-inset-bottom))] max-h-[92vh] overflow-y-auto"
       >
         <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-line sm:hidden" />
         <h2 className="text-base font-semibold mb-1">Workspace</h2>
         <p className="text-xs text-ink-muted mb-4">
-          Display names and tracker title. Synced on both devices.
+          Names, invite code, and space controls.
         </p>
 
         <label className="block mb-3">
           <span className="text-xs text-ink-muted uppercase tracking-wide">
-            Tracker title
+            Space name
           </span>
           <input
             value={coupleLabel}
             onChange={(e) => setCoupleLabel(e.target.value)}
-            className="mt-1 w-full rounded border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-critical"
+            className="mt-1 w-full rounded border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-accent"
           />
         </label>
 
         <div className="grid grid-cols-2 gap-3 mb-4">
           <label className="block">
             <span className="text-xs text-ink-muted uppercase tracking-wide">
-              Person A
+              Partner A
             </span>
             <input
               required
               value={partnerAName}
               onChange={(e) => setPartnerAName(e.target.value)}
-              className="mt-1 w-full rounded border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-critical"
+              className="mt-1 w-full rounded border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-accent"
             />
           </label>
           <label className="block">
             <span className="text-xs text-ink-muted uppercase tracking-wide">
-              Person B
+              Partner B
             </span>
             <input
               required
               value={partnerBName}
               onChange={(e) => setPartnerBName(e.target.value)}
-              className="mt-1 w-full rounded border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-ink-muted"
+              className="mt-1 w-full rounded border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-accent"
             />
           </label>
+        </div>
+
+        {workspace && (
+          <div className="mb-4 rounded-xl border border-line bg-surface px-3 py-3">
+            <p className="text-[11px] uppercase tracking-wide text-ink-dim">
+              Invite code
+            </p>
+            <p className="mt-1 font-display text-2xl tracking-[0.18em] text-accent-strong">
+              {workspace.inviteCode}
+            </p>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(inviteLink);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 1500);
+                } catch {
+                  /* ignore */
+                }
+              }}
+              className="mt-2 text-xs text-ink-muted hover:text-ink"
+            >
+              {copied ? "Link copied" : "Copy invite link"}
+            </button>
+          </div>
+        )}
+
+        {workspace && onToggleFairness && (
+          <label className="mb-4 flex items-start gap-3 rounded-xl border border-line bg-surface px-3 py-3">
+            <input
+              type="checkbox"
+              checked={!!workspace.showFairness}
+              onChange={(e) => void onToggleFairness(e.target.checked)}
+              className="mt-0.5"
+            />
+            <span>
+              <span className="block text-sm text-ink">Fairness signal</span>
+              <span className="mt-0.5 block text-[11px] text-ink-dim">
+                Soft open-load bar on Home. Opt-in, not a scoreboard.
+              </span>
+            </span>
+          </label>
+        )}
+
+        <div className="mb-4 rounded-xl border border-line bg-surface px-3 py-3 space-y-2">
+          <p className="text-sm text-ink">Shortcuts</p>
+          <p className="text-[11px] text-ink-dim">
+            Search anywhere with ⌘K / Ctrl+K. Shared lists live at{" "}
+            <Link href="/lists" className="text-accent-strong hover:underline" onClick={onClose}>
+              /lists
+            </Link>
+            .
+          </p>
+          <p className="text-[11px] text-ink-dim">
+            Install: Safari Share → Add to Home Screen · Chrome → Install app.
+          </p>
         </div>
 
         {error && <p className="mb-3 text-sm text-red-400">{error}</p>}
@@ -107,6 +206,27 @@ export function CoupleSettingsModal({ open, settings, onClose, onSave }: Props) 
             className="flex-1 rounded bg-ink py-2 text-sm font-medium text-surface hover:bg-white disabled:opacity-50"
           >
             {saving ? "Saving…" : "Save"}
+          </button>
+        </div>
+
+        <div className="mt-5 space-y-2 border-t border-line pt-4">
+          <button
+            type="button"
+            onClick={() => {
+              onLeave();
+              onClose();
+            }}
+            className="w-full rounded-full border border-line py-2.5 text-sm text-ink-muted hover:text-ink"
+          >
+            Leave space
+          </button>
+          <button
+            type="button"
+            disabled={deleting}
+            onClick={() => void handleDelete()}
+            className="w-full rounded-full border border-red-500/30 py-2.5 text-sm text-red-300 hover:border-red-400/50 disabled:opacity-40"
+          >
+            {deleting ? "Deleting…" : "Delete space & all data"}
           </button>
         </div>
       </form>

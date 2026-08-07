@@ -8,21 +8,39 @@ export function HomeClient() {
     <AppShell>
       {({
         visibleTasks,
+        visibleEvents,
         settings,
         me,
+        workspace,
+        pings,
         cycleStatus,
         setBlocked,
-        assignWeek,
         setAssignee,
+        setDueDate,
+        setPinned,
+        openEditTask,
+        openEditEvent,
+        pingPartnerForTask,
+        dismissPing,
+        setShowFairness,
       }) => (
         <Dashboard
           tasks={visibleTasks}
+          events={visibleEvents}
           settings={settings}
           me={me}
+          workspace={workspace}
+          pings={pings}
           onCycleStatus={cycleStatus}
           onSetBlocked={setBlocked}
-          onAssignWeek={assignWeek}
           onSetAssignee={setAssignee}
+          onSetDueDate={setDueDate}
+          onSetPinned={setPinned}
+          onEditTask={openEditTask}
+          onEditEvent={openEditEvent}
+          onPingPartner={pingPartnerForTask}
+          onDismissPing={dismissPing}
+          onToggleFairness={setShowFairness}
         />
       )}
     </AppShell>

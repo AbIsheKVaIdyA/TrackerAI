@@ -1,5 +1,5 @@
-import { HomeClient } from "./HomeClient";
+import { MarketingClient } from "./MarketingClient";
 
 export default function HomePage() {
-  return <HomeClient />;
+  return <MarketingClient />;
 }

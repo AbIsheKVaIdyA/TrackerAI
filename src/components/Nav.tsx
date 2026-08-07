@@ -1,72 +1,82 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { UserButton } from "@clerk/nextjs";
 import type { CoupleSettings, PartnerId } from "@/lib/types";
 import { partnerName } from "@/lib/types";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const LINKS = [
-  { href: "/", label: "Home", short: "Home" },
-  { href: "/week", label: "Week", short: "Week" },
-  { href: "/backlog", label: "Backlog", short: "Back" },
-  { href: "/summary", label: "Summary", short: "End" },
+const DESKTOP_LINKS = [
+  { href: "/home", label: "Home" },
+  { href: "/tasks", label: "Tasks" },
+  { href: "/calendar", label: "Calendar" },
+  { href: "/lists", label: "Lists" },
+  { href: "/review", label: "Review" },
+  { href: "/backlog", label: "Backlog" },
+];
+
+const MOBILE_LINKS = [
+  { href: "/capture", label: "Add", short: "Add" },
+  { href: "/home", label: "Home", short: "Home" },
+  { href: "/tasks", label: "Tasks", short: "Tasks" },
+  { href: "/calendar", label: "Calendar", short: "Cal" },
+];
+
+const MORE_LINKS = [
+  { href: "/lists", label: "Lists" },
+  { href: "/review", label: "Weekly review" },
+  { href: "/backlog", label: "Backlog" },
 ];
 
 interface Props {
-  onAdd: () => void;
   onSettings: () => void;
-  onChoose: (id: PartnerId) => void;
+  onSearch?: () => void;
+  onLeaveSpace?: () => void;
   settings: CoupleSettings;
   me: PartnerId;
-  live: boolean;
 }
 
 export function Nav({
-  onAdd,
   onSettings,
-  onChoose,
+  onSearch,
+  onLeaveSpace,
   settings,
   me,
-  live,
 }: Props) {
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const onCapture = pathname.startsWith("/capture");
+  const myName = partnerName(me, settings);
 
   useEffect(() => {
-    function onDoc(e: MouseEvent) {
-      if (!menuRef.current?.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
-  }, []);
+    setMoreOpen(false);
+  }, [pathname]);
 
   const brandShort =
     settings.coupleLabel.length > 16
       ? settings.coupleLabel.slice(0, 14) + "…"
       : settings.coupleLabel;
 
+  const moreActive =
+    MORE_LINKS.some((l) => pathname.startsWith(l.href)) || moreOpen;
+
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-line bg-surface/95 backdrop-blur pt-[env(safe-area-inset-top)]">
-        <div className="mx-auto flex max-w-6xl items-center gap-2 px-3 py-2 sm:gap-3 sm:px-4 sm:py-2.5">
+      <header className="sticky top-0 z-40 border-b border-line/80 bg-surface/90 backdrop-blur-md pt-[env(safe-area-inset-top)]">
+        <div className="mx-auto flex max-w-6xl items-center gap-3 px-3 py-2.5 sm:px-4">
           <Link
-            href="/"
-            className="min-w-0 shrink font-semibold tracking-tight text-ink text-sm sm:text-base truncate"
+            href="/home"
+            className="min-w-0 shrink font-display text-lg sm:text-xl tracking-tight text-ink truncate"
             title={settings.coupleLabel}
           >
             <span className="sm:hidden">{brandShort}</span>
             <span className="hidden sm:inline">{settings.coupleLabel}</span>
           </Link>
 
-          {/* Desktop nav links */}
           <nav className="hidden md:flex flex-1 items-center gap-0.5 overflow-x-auto text-sm">
-            {LINKS.map((link) => {
-              const active =
-                link.href === "/"
-                  ? pathname === "/"
-                  : pathname.startsWith(link.href);
+            {DESKTOP_LINKS.map((link) => {
+              const active = pathname.startsWith(link.href);
               return (
                 <Link
                   key={link.href}
@@ -77,92 +87,88 @@ export function Nav({
                       : "text-ink-muted hover:bg-surface-hover hover:text-ink"
                   }`}
                 >
-                  {link.label === "Home" ? "Dashboard" : link.label === "Summary" ? "End of week" : link.label === "Week" ? "Week view" : link.label}
+                  {link.label}
                 </Link>
               );
             })}
           </nav>
 
-          <div className="ml-auto flex shrink-0 items-center gap-1.5">
-            <span
-              title={live ? "Realtime sync active" : "Connecting…"}
-            className={`inline-flex items-center gap-1 rounded px-1 py-0.5 text-[10px] uppercase tracking-wide ${
-              live ? "text-ink-muted" : "text-ink-dim"
-            }`}
-          >
-            <span
-              className={`h-1.5 w-1.5 rounded-full ${
-                live ? "bg-ink" : "bg-ink-dim"
-              }`}
-            />
-            <span className="hidden sm:inline">Live</span>
-          </span>
-
-            <div className="relative" ref={menuRef}>
+          {/* Actions: search · identity · account · add */}
+          <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-2.5">
+            {onSearch && (
               <button
                 type="button"
-                onClick={() => setOpen((v) => !v)}
-                className={`rounded-full border px-2.5 py-1.5 text-xs min-h-[32px] ${
-                  me === "a"
-                    ? "border-accent/50 text-accent-strong"
-                    : "border-ink-muted/40 text-ink-muted"
-                }`}
-                title="Switch profile"
+                onClick={onSearch}
+                className="inline-flex h-9 items-center gap-1.5 rounded-full border border-line/70 bg-surface-elevated/40 px-2.5 text-ink-muted transition-colors hover:border-line hover:text-ink sm:px-3"
+                title="Search (⌘K)"
+                aria-label="Search"
               >
-                {partnerName(me, settings)}
-                <span className="ml-0.5 opacity-70">▾</span>
+                <SearchIcon />
+                <span className="hidden text-xs sm:inline">Search</span>
+                <kbd className="hidden rounded border border-line/60 px-1 py-px text-[10px] text-ink-dim lg:inline">
+                  ⌘K
+                </kbd>
               </button>
-              {open && (
-                <div className="absolute right-0 top-full mt-1 min-w-[9rem] border border-line bg-surface-elevated py-1 shadow-lg z-50">
-                  {(["a", "b"] as PartnerId[]).map((id) => (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => {
-                        onChoose(id);
-                        setOpen(false);
-                      }}
-                      className={`flex w-full items-center justify-between px-3 py-2.5 text-left text-xs hover:bg-surface-hover ${
-                        me === id ? "text-ink" : "text-ink-muted"
-                      }`}
-                    >
-                      <span>{partnerName(id, settings)}</span>
-                      {me === id && <span className="text-[10px]">✓</span>}
-                    </button>
-                  ))}
-                </div>
-              )}
+            )}
+
+            <div className="hidden h-5 w-px bg-line/70 sm:block" aria-hidden />
+
+            <div className="flex items-center gap-2 rounded-full border border-line/70 bg-surface-elevated/50 py-1 pl-2.5 pr-1">
+              <div className="min-w-0 hidden sm:block">
+                <p className="truncate text-[11px] leading-none text-ink-dim">
+                  You
+                </p>
+                <p className="mt-0.5 max-w-[7rem] truncate text-xs font-medium leading-none text-ink">
+                  {myName}
+                </p>
+              </div>
+              <UserButton
+                afterSignOutUrl="/"
+                appearance={{
+                  elements: {
+                    avatarBox: "h-8 w-8 ring-1 ring-line",
+                    userButtonPopoverCard:
+                      "border border-line bg-surface-elevated shadow-xl",
+                    userButtonPopoverActionButton: "hover:bg-surface-hover",
+                    userButtonPopoverActionButtonText: "text-ink",
+                    userButtonPopoverFooter: "hidden",
+                  },
+                }}
+              >
+                <UserButton.MenuItems>
+                  <UserButton.Action
+                    label="Space settings"
+                    labelIcon={<GearIcon />}
+                    onClick={onSettings}
+                  />
+                  {onLeaveSpace && (
+                    <UserButton.Action
+                      label="Leave space"
+                      labelIcon={<LeaveIcon />}
+                      onClick={onLeaveSpace}
+                    />
+                  )}
+                </UserButton.MenuItems>
+              </UserButton>
             </div>
 
-            <button
-              type="button"
-              onClick={onSettings}
-              className="hidden sm:inline-flex rounded px-2 py-1.5 text-xs text-ink-muted hover:bg-surface-hover hover:text-ink min-h-[32px]"
-              title="Workspace settings"
-            >
-              Settings
-            </button>
-
-            <button
-              type="button"
-              onClick={onAdd}
-              className="rounded-full bg-ink px-3 sm:px-3.5 py-1.5 text-sm font-medium text-surface hover:bg-white transition-colors min-h-[32px]"
-            >
-              <span className="sm:hidden">+</span>
-              <span className="hidden sm:inline">+ Add task</span>
-            </button>
+            {!onCapture && (
+              <Link
+                href="/capture"
+                className="inline-flex h-9 items-center rounded-full bg-ink px-3.5 text-sm font-medium text-surface transition-colors hover:bg-white"
+              >
+                <span className="sm:hidden">+</span>
+                <span className="hidden sm:inline">+ Add</span>
+              </Link>
+            )}
           </div>
         </div>
       </header>
 
-      {/* Mobile bottom tabs */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-line bg-surface/95 backdrop-blur pb-[env(safe-area-inset-bottom)]">
         <div className="mx-auto flex max-w-6xl items-stretch">
-          {LINKS.map((link) => {
-            const active =
-              link.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(link.href);
+          {MOBILE_LINKS.map((link) => {
+            const active = pathname.startsWith(link.href);
             return (
               <Link
                 key={link.href}
@@ -182,14 +188,155 @@ export function Nav({
           })}
           <button
             type="button"
-            onClick={onSettings}
-            className="flex-1 py-2.5 text-center text-[11px] font-medium text-ink-dim"
+            onClick={() => setMoreOpen(true)}
+            className={`flex-1 py-2.5 text-center text-[11px] font-medium ${
+              moreActive ? "text-ink" : "text-ink-dim"
+            }`}
           >
-            <span className="mx-auto mb-0.5 block h-0.5 w-5 rounded-full bg-transparent" />
+            <span
+              className={`mx-auto mb-0.5 block h-0.5 w-5 rounded-full ${
+                moreActive ? "bg-accent" : "bg-transparent"
+              }`}
+            />
             More
           </button>
         </div>
       </nav>
+
+      {moreOpen && (
+        <div className="md:hidden fixed inset-0 z-50 flex items-end">
+          <button
+            type="button"
+            aria-label="Close"
+            className="absolute inset-0 bg-black/60"
+            onClick={() => setMoreOpen(false)}
+          />
+          <div className="relative z-10 w-full rounded-t-2xl border border-line bg-surface-elevated px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-xl">
+            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-line" />
+            <div className="mb-3 flex items-center justify-between rounded-xl border border-line/70 bg-surface px-3 py-2.5">
+              <div>
+                <p className="text-[11px] text-ink-dim">Signed in as</p>
+                <p className="text-sm text-ink">{myName}</p>
+              </div>
+              <UserButton afterSignOutUrl="/" />
+            </div>
+            <p className="mb-2 text-xs uppercase tracking-wide text-ink-dim">
+              More
+            </p>
+            <ul className="space-y-0.5">
+              {MORE_LINKS.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    onClick={() => setMoreOpen(false)}
+                    className={`block rounded-xl px-3 py-3 text-sm ${
+                      pathname.startsWith(link.href)
+                        ? "bg-accent-dim text-accent-strong"
+                        : "text-ink hover:bg-surface-hover"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+              {onSearch && (
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMoreOpen(false);
+                      onSearch();
+                    }}
+                    className="block w-full rounded-xl px-3 py-3 text-left text-sm text-ink hover:bg-surface-hover"
+                  >
+                    Search
+                  </button>
+                </li>
+              )}
+              <li>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMoreOpen(false);
+                    onSettings();
+                  }}
+                  className="block w-full rounded-xl px-3 py-3 text-left text-sm text-ink hover:bg-surface-hover"
+                >
+                  Space settings
+                </button>
+              </li>
+              {onLeaveSpace && (
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMoreOpen(false);
+                      onLeaveSpace();
+                    }}
+                    className="block w-full rounded-xl px-3 py-3 text-left text-sm text-ink-muted hover:bg-surface-hover"
+                  >
+                    Leave space
+                  </button>
+                </li>
+              )}
+            </ul>
+          </div>
+        </div>
+      )}
     </>
+  );
+}
+
+function SearchIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      aria-hidden
+    >
+      <circle cx="11" cy="11" r="7" />
+      <path d="M20 20l-3.5-3.5" />
+    </svg>
+  );
+}
+
+function GearIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden
+    >
+      <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+      <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9c.3.6.9 1 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" />
+    </svg>
+  );
+}
+
+function LeaveIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      aria-hidden
+    >
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <path d="M16 17l5-5-5-5" />
+      <path d="M21 12H9" />
+    </svg>
   );
 }
